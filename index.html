@@ -1,0 +1,1572 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>מסך ניתוח מניות · Equity Research Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&family=Frank+Ruhl+Libre:wght@500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    /* dark theme */
+    --navy:#0d1626; --navy2:#16263f;
+    --head:#eaf1fb; --ink:#d7e2f0; --muted:#9db0c8; --muted2:#71849e;
+    --bg:#0a111e; --card:#131e30; --card2:#0f1827; --line:#27374f; --line2:#1d2b41;
+    --input:#0e1828; --chip:#1a2840;
+    --green:#37d39b; --green-bg:#10271f; --red:#f6726a; --red-bg:#2a1417;
+    --amber:#f4b35a; --amber-bg:#2a2113; --gray:#9db0c8; --gray-bg:#1a2840;
+    --accent:#3f86f4; --accent-bg:#122441; --selfrow:#172a46;
+    --shadow:0 1px 2px rgba(0,0,0,.45),0 12px 34px rgba(0,0,0,.40);
+    --radius:16px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:'Heebo','Segoe UI',Arial,sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .ltr{direction:ltr;unicode-bidi:isolate}
+  .num{direction:ltr;unicode-bidi:isolate;font-family:'Inter','Heebo',sans-serif;font-variant-numeric:tabular-nums}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+
+  /* Header */
+  header.top{background:linear-gradient(135deg,#0e1d33,#16263f);color:#fff;padding:18px 0;border-bottom:1px solid var(--line)}
+  .wrap{max-width:1140px;margin:0 auto;padding:0 20px}
+  .top-row{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand .logo{width:42px;height:42px;border-radius:11px;background:rgba(255,255,255,.10);display:flex;align-items:center;justify-content:center;font-size:22px}
+  .brand h1{font-size:20px;font-weight:800;margin:0;letter-spacing:-.2px;color:#fff}
+  .brand .sub{font-size:12.5px;color:#9fb4d6;margin-top:1px}
+  .key-status{display:flex;align-items:center;gap:8px;font-size:12.5px;color:#bcccea;cursor:pointer;background:rgba(255,255,255,.08);padding:7px 12px;border-radius:10px;border:1px solid var(--line)}
+  .key-status .dot{width:8px;height:8px;border-radius:50%;background:#f1c40f}
+  .key-status.ok .dot{background:#39d98a}
+
+  /* Search */
+  .search-wrap{max-width:1140px;margin:-26px auto 0;padding:0 20px;position:relative;z-index:5}
+  .search-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;border:1px solid var(--line)}
+  .search-row{display:flex;gap:10px;flex-wrap:wrap}
+  .search-row .field{flex:1;min-width:220px;display:flex;align-items:center;gap:10px;background:var(--input);border:1.5px solid var(--line);border-radius:12px;padding:0 14px}
+  .search-row .field:focus-within{border-color:var(--accent);background:#0c1726}
+  .search-row input{flex:1;border:0;background:transparent;color:var(--head);font-size:18px;font-weight:700;padding:13px 0;outline:none;font-family:'Inter',sans-serif;letter-spacing:1px;text-transform:uppercase;direction:ltr}
+  .search-row input::placeholder{font-weight:500;letter-spacing:0;text-transform:none;color:var(--muted2)}
+  .btn{border:0;border-radius:12px;padding:0 24px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit}
+  .btn-primary{background:var(--accent);color:#fff}
+  .btn-primary:hover{background:#5a98f6}
+  .btn-primary:disabled{opacity:.5;cursor:default}
+  .chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px;align-items:center}
+  .chips .lbl{font-size:12.5px;color:var(--muted)}
+  .chip{font-family:'Inter',sans-serif;font-weight:600;font-size:13px;background:var(--chip);color:#cfe0fb;border:1px solid var(--line);padding:5px 11px;border-radius:20px;cursor:pointer}
+  .chip:hover{background:var(--accent-bg);border-color:var(--accent)}
+
+  /* Key panel */
+  .keypanel{display:none;background:var(--accent-bg);border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:13px}
+  .keypanel.show{display:block}
+  .keypanel h3{margin:0 0 6px;font-size:15.5px;color:var(--head)}
+  .keypanel p{margin:0 0 10px;font-size:13.5px;color:var(--muted)}
+  .keypanel ol{margin:0 0 12px;padding-inline-start:20px;font-size:13.5px;color:var(--muted)}
+  .keypanel li{margin-bottom:3px}
+  .keyrow{display:flex;gap:8px;flex-wrap:wrap}
+  .keyrow input{flex:1;min-width:220px;background:var(--input);color:var(--head);border:1.5px solid var(--line);border-radius:10px;padding:11px 13px;font-family:'Inter',sans-serif;font-size:14px;direction:ltr;outline:none}
+  .keyrow input:focus{border-color:var(--accent)}
+  .keyrow .btn{background:var(--accent);color:#fff;padding:0 20px}
+  .keyhint{font-size:12px;color:var(--muted2);margin-top:8px}
+
+  /* Layout */
+  main{max-width:1140px;margin:22px auto 60px;padding:0 20px}
+  .status{text-align:center;padding:60px 20px;color:var(--muted)}
+  .spinner{width:38px;height:38px;border:4px solid var(--line2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .err{background:var(--red-bg);border:1px solid #5a2a2c;color:#f6b6b0;border-radius:14px;padding:16px 18px;font-size:14.5px}
+  .hero-empty{text-align:center;padding:50px 20px;color:var(--muted)}
+  .hero-empty .big{font-size:52px;margin-bottom:8px}
+  .hero-empty h2{color:var(--head);font-size:21px;margin:0 0 6px}
+
+  .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:18px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px}
+  .card h2.ctitle{font-size:15px;font-weight:700;color:var(--head);margin:0 0 4px;display:flex;align-items:center;gap:8px}
+  .card .csub{font-size:12px;color:var(--muted2);margin:0 0 15px}
+  .ctitle .ico{font-size:17px}
+  .col-12{grid-column:span 12}
+  .col-8{grid-column:span 8}
+  .col-7{grid-column:span 7}
+  .col-6{grid-column:span 6}
+  .col-5{grid-column:span 5}
+  .col-4{grid-column:span 4}
+  @media(max-width:860px){.col-8,.col-7,.col-6,.col-5,.col-4{grid-column:span 12}}
+
+  /* Company header */
+  .company{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+  .company .clogo,.lead-side .clogo{width:60px;height:60px;border-radius:14px;background:#eef3fb;border:1px solid var(--line);object-fit:contain;padding:6px;flex-shrink:0}
+  .company .cinfo{flex:1;min-width:200px}
+  .company .cname{font-size:22px;font-weight:800;color:var(--head);line-height:1.2}
+  .company .cmeta{font-size:13px;color:var(--muted);margin-top:3px;display:flex;gap:10px;flex-wrap:wrap}
+  .company .cmeta .tk{font-family:'Inter',sans-serif;font-weight:700;color:#cfe0fb;background:var(--chip);padding:1px 8px;border-radius:6px}
+  .company .cmeta .sep{color:#3a4a63}
+  .price-block{text-align:left;min-width:150px}
+  .price-block .px{font-size:30px;font-weight:800;font-family:'Inter',sans-serif;color:var(--head)}
+  .price-block .chg{font-size:15px;font-weight:600;font-family:'Inter',sans-serif;margin-top:2px}
+  .up{color:var(--green)} .down{color:var(--red)}
+
+  /* Verdict */
+  .verdict{display:grid;grid-template-columns:230px 1fr;gap:22px;align-items:center}
+  @media(max-width:680px){.verdict{grid-template-columns:1fr}}
+  .gauge-wrap{text-align:center}
+  .gauge-score{font-size:40px;font-weight:800;font-family:'Inter',sans-serif;line-height:1;margin-top:-6px}
+  .gauge-label{font-size:14px;font-weight:700;margin-top:4px}
+  .gauge-cap{font-size:11.5px;color:var(--muted2);margin-top:2px}
+  .vbody .risk-badge{display:inline-flex;align-items:center;gap:7px;font-weight:700;font-size:14px;padding:7px 14px;border-radius:10px;margin-bottom:10px}
+  .vsummary{font-size:14px;color:var(--ink);background:var(--card2);border:1px solid var(--line2);border-radius:12px;padding:13px 15px;margin-bottom:12px}
+  .vsummary b{color:var(--head)}
+  .factor-mini{display:flex;gap:7px;flex-wrap:wrap}
+  .fm{font-size:11.5px;padding:4px 9px;border-radius:8px;font-weight:600;border:1px solid transparent}
+
+  /* Tags */
+  .t-good{background:var(--green-bg);color:var(--green)}
+  .t-ok{background:var(--amber-bg);color:var(--amber)}
+  .t-weak{background:var(--red-bg);color:var(--red)}
+  .t-neu{background:var(--gray-bg);color:var(--muted)}
+  .dot-tag{display:inline-block;width:9px;height:9px;border-radius:50%;margin-inline-start:6px;vertical-align:middle}
+  .d-good{background:var(--green)} .d-ok{background:var(--amber)} .d-weak{background:var(--red)} .d-neu{background:var(--muted2)}
+
+  /* Move analysis */
+  .movecard{border-inline-start:4px solid var(--line)}
+  .movecard.sig-up{border-inline-start-color:var(--green)}
+  .movecard.sig-down{border-inline-start-color:var(--red)}
+  .move-rows{display:flex;gap:14px;flex-wrap:wrap;margin:4px 0 12px}
+  .move-row{flex:1;min-width:210px;background:var(--input);border:1px solid var(--line2);border-radius:12px;padding:12px 14px}
+  .move-row .mh{font-size:12px;color:var(--muted)}
+  .move-row .mbig{font-size:23px;font-weight:800;font-family:'Inter',sans-serif;margin:2px 0}
+  .move-row .msub{font-size:12px;color:var(--muted2);font-family:'Inter',sans-serif}
+  .move-flag{display:inline-block;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:7px;margin-top:7px}
+  .move-detail{font-size:13.5px;color:var(--ink);background:var(--card2);border:1px solid var(--line2);border-radius:12px;padding:12px 14px;line-height:1.65}
+  .move-detail b{color:var(--head)}
+  .move-note{font-size:11.5px;color:var(--muted2);margin-top:10px}
+
+  /* Metrics grid */
+  .mgroup{margin-bottom:16px}
+  .mgroup:last-child{margin-bottom:0}
+  .mgroup .gh{font-size:12.5px;font-weight:700;color:var(--head);text-transform:uppercase;letter-spacing:.4px;margin-bottom:9px;padding-bottom:6px;border-bottom:1px solid var(--line2)}
+  .metrics{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:11px}
+  .metric{background:var(--input);border:1px solid var(--line2);border-radius:11px;padding:10px 12px}
+  .metric .ml{font-size:11.5px;color:var(--muted);display:flex;align-items:center;justify-content:space-between;gap:4px}
+  .metric .ml .en{font-family:'Inter',sans-serif;color:var(--muted2);font-size:10.5px}
+  .metric .mv{font-size:18px;font-weight:700;font-family:'Inter',sans-serif;margin-top:3px;color:var(--head)}
+
+  /* Range bars */
+  .range{margin:14px 0}
+  .range .rl{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px}
+  .range .rl .rlab{color:var(--ink);font-weight:600}
+  .track{position:relative;height:9px;background:#1a2740;border-radius:6px}
+  .track .fill{position:absolute;top:0;bottom:0;right:0;background:linear-gradient(90deg,var(--navy2),var(--accent));border-radius:6px}
+  .track .mark{position:absolute;top:-5px;width:4px;height:19px;background:var(--head);border-radius:3px;transform:translateX(50%);box-shadow:0 0 0 3px var(--card)}
+  .ends{display:flex;justify-content:space-between;font-size:12px;font-family:'Inter',sans-serif;color:var(--muted);margin-top:6px;direction:ltr}
+  .returns{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+  .ret{flex:1;min-width:70px;text-align:center;background:var(--input);border:1px solid var(--line2);border-radius:10px;padding:8px 4px}
+  .ret .rk{font-size:11px;color:var(--muted)}
+  .ret .rv{font-size:14.5px;font-weight:700;font-family:'Inter',sans-serif;margin-top:2px}
+
+  /* Breakdown tables */
+  .bd-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  @media(max-width:760px){.bd-grid{grid-template-columns:1fr}}
+  .bd h4{font-size:13.5px;color:var(--head);margin:0 0 10px;display:flex;align-items:center;justify-content:space-between}
+  .bd h4 .score-pill{font-family:'Inter',sans-serif;font-size:13px;background:var(--navy2);color:#0a111e;padding:3px 11px;border-radius:20px;font-weight:700}
+  table.bdt{width:100%;border-collapse:collapse;font-size:13px}
+  table.bdt td{padding:8px 4px;border-bottom:1px solid var(--line2);vertical-align:middle}
+  table.bdt tr:last-child td{border-bottom:0}
+  .bdt .f-name{font-weight:600;color:var(--ink)}
+  .bdt .f-name small{display:block;font-weight:400;color:var(--muted2);font-size:10.5px;font-family:'Inter',sans-serif}
+  .bdt .f-raw{font-family:'Inter',sans-serif;color:var(--muted);font-size:12px;text-align:left;white-space:nowrap}
+  .barcell{width:120px}
+  .minibar{position:relative;height:7px;background:var(--line2);border-radius:5px;overflow:hidden}
+  .minibar .mf{position:absolute;top:0;bottom:0;right:0;border-radius:5px}
+  .wlbl{font-size:10.5px;color:var(--muted2);font-family:'Inter',sans-serif}
+
+  /* Analysts */
+  .recbar{display:flex;height:30px;border-radius:9px;overflow:hidden;margin:6px 0 12px;border:1px solid var(--line2)}
+  .recbar span{display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700;color:#06140e;font-family:'Inter',sans-serif;min-width:0}
+  .rc-sb{background:#1fae74}.rc-b{background:#56c08a}.rc-h{background:#d6a93f}.rc-s{background:#e5824f}.rc-ss{background:#dd5247}
+  .reclegend{display:flex;gap:6px;flex-wrap:wrap;font-size:11px;color:var(--muted)}
+  .reclegend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-inline-start:4px}
+  .consensus{font-size:15px;font-weight:700;margin-bottom:3px;color:var(--head)}
+  .trendline{font-size:12.5px;color:var(--muted)}
+
+  /* Peers */
+  table.peers{width:100%;border-collapse:collapse;font-size:13px}
+  table.peers th{text-align:right;font-size:11px;color:var(--muted);font-weight:600;padding:8px 6px;border-bottom:2px solid var(--line)}
+  table.peers th.n,table.peers td.n{text-align:left;font-family:'Inter',sans-serif}
+  table.peers td{padding:9px 6px;border-bottom:1px solid var(--line2)}
+  table.peers tr:last-child td{border-bottom:0}
+  table.peers .pt{font-weight:700;font-family:'Inter',sans-serif;color:#cfe0fb}
+  table.peers tr.self{background:var(--selfrow)}
+
+  /* News */
+  .news-hotgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}
+  @media(max-width:760px){.news-hotgrid{grid-template-columns:1fr}}
+  .hotcard{background:var(--input);border:1px solid var(--line2);border-radius:13px;padding:13px 14px;display:flex;flex-direction:column;gap:7px}
+  .hotcard .hhead{display:flex;align-items:center;justify-content:space-between;gap:6px}
+  .fire{font-size:11px;font-weight:800;color:#ffd9a0;background:#3a2a12;border:1px solid #5a4220;padding:2px 8px;border-radius:7px}
+  .hotcard .htitle{font-size:13.5px;font-weight:700;color:var(--head);line-height:1.4}
+  .hotcard .htitle a{color:var(--head)}
+  .hotcard .hsum{font-size:12.5px;color:var(--muted);line-height:1.55}
+  .hotcard .hmeta{font-size:11px;color:var(--muted2);margin-top:auto;font-family:'Inter',sans-serif}
+  .news-sub{font-size:12.5px;font-weight:700;color:var(--head);margin:4px 0 6px;padding-top:12px;border-top:1px solid var(--line2)}
+  .news-item{display:flex;gap:13px;padding:11px 0;border-bottom:1px solid var(--line2)}
+  .news-item:last-child{border-bottom:0}
+  .news-item .nthumb{width:64px;height:48px;border-radius:9px;object-fit:cover;background:var(--input);flex-shrink:0}
+  .news-item .nbody{flex:1;min-width:0}
+  .news-item .nhead{font-size:13.5px;font-weight:600;color:var(--ink);line-height:1.35}
+  .news-item .nhead a{color:var(--ink)}
+  .news-item .nmeta{font-size:11.5px;color:var(--muted2);margin-top:4px;display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+  .news-item .nsource{font-family:'Inter',sans-serif}
+  .sent{font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:6px}
+
+  .disclaimer{font-size:11.5px;color:var(--muted2);line-height:1.6;background:var(--card2);border:1px solid var(--line2);border-radius:12px;padding:13px 15px;margin-top:4px}
+  .disclaimer b{color:var(--muted)}
+  footer{text-align:center;font-size:12px;color:var(--muted2);padding:24px 20px 40px}
+  footer .ts{font-family:'Inter',sans-serif}
+  .badge-na{font-size:12px;color:var(--muted2);background:var(--card2);border:1px dashed var(--line);border-radius:10px;padding:11px 13px}
+
+  /* ===== newspaper masthead ===== */
+  .masthead{padding:22px 26px}
+  .nameplate{text-align:center;font-family:'Frank Ruhl Libre',Georgia,serif;font-weight:900;font-size:25px;letter-spacing:1px;color:var(--head);border-top:3px double var(--muted2);border-bottom:1px solid var(--muted2);padding:8px 0}
+  .nameplate .np-sub{font-family:'Inter',sans-serif;font-weight:600;font-size:10.5px;letter-spacing:3px;color:var(--muted2);display:block;margin-top:3px}
+  .dateline{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);padding:7px 0;border-bottom:1px solid var(--line);margin-bottom:16px}
+  .dateline .ltr{text-transform:none}
+  .lead{display:grid;grid-template-columns:1fr 188px;gap:22px;align-items:start}
+  @media(max-width:680px){.lead{grid-template-columns:1fr}}
+  .kicker{font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+  .headline{font-family:'Frank Ruhl Libre',Georgia,serif;font-weight:900;font-size:34px;line-height:1.15;color:var(--head);margin:0 0 9px}
+  @media(max-width:680px){.headline{font-size:26px}}
+  .standfirst{font-family:'Frank Ruhl Libre',Georgia,serif;font-size:16px;color:var(--ink);margin-bottom:13px;font-weight:500}
+  .lede{font-family:'Frank Ruhl Libre',Georgia,serif;font-size:15px;line-height:1.8;color:var(--ink);margin:0 0 12px;border-top:1px solid var(--line2);padding-top:13px}
+  .lede.has-text::first-letter{font-size:2.9em;font-weight:900;float:right;line-height:.82;margin-inline-end:9px;color:var(--accent)}
+  .lede-na{color:var(--muted2);font-family:'Heebo',sans-serif;font-size:13px}
+  .byline{font-size:12px;color:var(--muted2);border-top:1px solid var(--line2);padding-top:9px}
+  .byline a{color:var(--accent)} .byline .sep{color:#3a4a63}
+  .lead-side{display:flex;flex-direction:column;align-items:center;gap:10px;border-inline-start:1px solid var(--line);padding-inline-start:18px}
+  .lead-side .price-block{text-align:center;min-width:0}
+  @media(max-width:680px){.lead-side{border-inline-start:0;border-top:1px solid var(--line);padding-inline-start:0;padding-top:14px;flex-direction:row;justify-content:space-between;width:100%}}
+
+  /* newspaper kicker on card titles */
+  .card h2.ctitle{border-bottom:1px solid var(--line2);padding-bottom:9px;letter-spacing:.2px}
+  .card h2.ctitle .wlbl{margin-inline-start:auto;text-transform:uppercase;letter-spacing:1.5px}
+
+  /* ===== tooltips ===== */
+  .tipi{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;font-size:10px;font-weight:700;border-radius:50%;background:var(--accent-bg);color:#9cc2fb;border:1px solid var(--line);margin-inline-start:5px;cursor:help;font-family:'Inter',sans-serif;vertical-align:middle;user-select:none}
+  .tipi:hover{background:var(--accent);color:#fff}
+  #tooltip{position:fixed;z-index:9999;max-width:300px;background:#0a1422;color:var(--ink);border:1px solid var(--accent);border-radius:11px;padding:11px 13px;font-size:12.5px;line-height:1.65;box-shadow:0 10px 34px rgba(0,0,0,.55);pointer-events:none;opacity:0;transform:translateY(4px);transition:opacity .12s,transform .12s;font-family:'Heebo',sans-serif;text-align:right}
+  #tooltip.show{opacity:1;transform:translateY(0)}
+  #tooltip .tt-term{display:block;font-weight:700;color:var(--head);margin-bottom:4px;font-size:13px}
+
+  /* ===== earnings ===== */
+  .eqrow{display:flex;gap:10px;flex-wrap:wrap}
+  .eq{flex:1;min-width:118px;background:var(--input);border:1px solid var(--line2);border-radius:11px;padding:11px 12px;text-align:center}
+  .eq .eqh{font-size:11.5px;color:var(--muted);font-family:'Inter',sans-serif}
+  .eq .eqa{font-size:19px;font-weight:800;color:var(--head);margin-top:3px}
+  .eq .eqe{font-size:11px;color:var(--muted2);margin-top:1px}
+  .eq .eqs{font-size:12.5px;font-weight:700;margin-top:6px}
+
+  /* ===== chart ===== */
+  .tvwrap{height:470px;width:100%;border-radius:12px;overflow:hidden;border:1px solid var(--line2);background:var(--input)}
+  .tvwrap .tv-na{display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted2);font-size:13px;padding:0 16px;text-align:center}
+
+  /* ===== comparison & peers charts, live price ===== */
+  .cmpwrap{position:relative;height:320px;width:100%;margin-top:8px}
+  .cmpnote{font-size:11.5px;color:var(--muted2);margin-top:10px;line-height:1.6}
+  .live-ind{font-size:10px;color:var(--muted2);font-family:'Inter',sans-serif;margin-top:6px;display:flex;align-items:center;gap:5px;letter-spacing:.5px}
+  .live-dot{width:7px;height:7px;border-radius:50%;background:#37d39b;animation:pulse 1.9s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(55,211,155,.5)}70%{box-shadow:0 0 0 7px rgba(55,211,155,0)}100%{box-shadow:0 0 0 0 rgba(55,211,155,0)}}
+  .peer-chart-head{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);margin:2px 0 6px}
+  .peer-chart-head select{background:var(--input);color:var(--head);border:1px solid var(--line);border-radius:8px;padding:5px 9px;font-family:inherit;font-size:12.5px;cursor:pointer}
+  table.peers tr.prow{cursor:pointer}
+  table.peers tr.prow:hover{background:var(--input)}
+  table.peers tr.prow .n.pt::before{content:"▾ ";color:var(--muted2);font-size:10px}
+  .peer-detail td{background:var(--card2);padding:0!important;border-bottom:1px solid var(--line)!important}
+  .pd-box{padding:12px 15px}
+  .pd-name{font-weight:700;color:var(--head);margin-bottom:8px}
+  .pd-tk{font-family:'Inter',sans-serif;color:var(--muted);font-weight:600;font-size:12px}
+  .pd-grid{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:12.5px;color:var(--muted);margin-bottom:11px}
+  .pd-grid b{color:var(--head)}
+  .pd-btn{background:var(--accent);color:#fff;border:0;border-radius:9px;padding:7px 14px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit}
+  .pd-btn:hover{background:#5a98f6}
+
+  /* ===== first-time welcome ===== */
+  .welcome{max-width:640px;margin:6px auto;text-align:center;padding:28px 22px}
+  .welcome .big{font-size:50px;margin-bottom:8px}
+  .welcome h2{color:var(--head);font-size:23px;margin:0 0 10px}
+  .welcome p{color:var(--muted);font-size:14.5px;line-height:1.75;margin:0 0 14px}
+  .welcome ol{text-align:right;max-width:470px;margin:0 auto 20px;color:var(--ink);font-size:14.5px;line-height:2;padding-inline-start:6px;list-style-position:inside}
+  .welcome ol b{color:var(--head)}
+  .welcome .startbtn{background:var(--accent);color:#fff;border:0;border-radius:12px;padding:14px 28px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit}
+  .welcome .startbtn:hover{background:#5a98f6}
+  .welcome .fine{font-size:12px;color:var(--muted2);margin-top:18px;line-height:1.6}
+  .welcome a{color:var(--accent);font-weight:600}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap top-row">
+    <div class="brand">
+      <div class="logo">📊</div>
+      <div>
+        <h1>מסך ניתוח מניות</h1>
+        <div class="sub"><span class="ltr">Equity Research Desk</span> · ניתוח מעמיק לפי טיקר</div>
+      </div>
+    </div>
+    <div id="keyStatus" class="key-status" onclick="toggleKeyPanel()">
+      <span class="dot"></span><span id="keyStatusText">חיבור מפתח API</span>
+    </div>
+  </div>
+</header>
+
+<div class="search-wrap">
+  <div class="search-card">
+    <div class="search-row">
+      <label class="field">
+        <span style="font-size:18px">🔎</span>
+        <input id="ticker" type="text" placeholder="הקלידי טיקר, למשל AAPL" autocomplete="off" maxlength="8"
+               onkeydown="if(event.key==='Enter')run()">
+      </label>
+      <button class="btn btn-primary" id="goBtn" onclick="run()">נתח מניה</button>
+    </div>
+    <div class="chips">
+      <span class="lbl">פופולריות:</span>
+      <span class="chip" onclick="quick('AAPL')">AAPL</span>
+      <span class="chip" onclick="quick('MSFT')">MSFT</span>
+      <span class="chip" onclick="quick('NVDA')">NVDA</span>
+      <span class="chip" onclick="quick('GOOGL')">GOOGL</span>
+      <span class="chip" onclick="quick('AMZN')">AMZN</span>
+      <span class="chip" onclick="quick('TSLA')">TSLA</span>
+      <span class="chip" onclick="quick('META')">META</span>
+    </div>
+    <div class="chips" id="recentChips" style="display:none"></div>
+
+    <div class="keypanel" id="keyPanel">
+      <h3>חיבור מפתח Finnhub (חינמי)</h3>
+      <p>הדף מושך נתונים חיים מ-Finnhub. צריך מפתח אישי חינמי — הרשמה של דקה:</p>
+      <ol>
+        <li>נכנסים ל-<a href="https://finnhub.io/register" target="_blank" rel="noopener">finnhub.io/register</a> ונרשמים (חינם).</li>
+        <li>במסך ה-Dashboard מעתיקים את ה-<span class="ltr">API Key</span>.</li>
+        <li>מדביקים כאן למטה ולוחצים "שמירה". המפתח נשמר רק בדפדפן שלך.</li>
+      </ol>
+      <div class="keyrow">
+        <input id="keyInput" type="text" placeholder="מדביקים כאן את ה-API Key" autocomplete="off" spellcheck="false">
+        <button class="btn" onclick="saveKey()">שמירה</button>
+      </div>
+      <div class="keyhint">המפתח נשמר מקומית בדפדפן (<span class="ltr">localStorage</span>) ולא נשלח לשום מקום מלבד Finnhub עצמו.</div>
+    </div>
+  </div>
+</div>
+
+<main>
+  <div id="results">
+    <div class="hero-empty">
+      <div class="big">🏦</div>
+      <h2>בחרי טיקר כדי להתחיל</h2>
+      <p>פרופיל חברה, מחיר וטווח שנתי, דוחות ויחסים פיננסיים, ניתוח תנועת מחיר מול התנודתיות,<br>
+         חדשות חמות עם סיכומים, המלצות אנליסטים, מתחרים, וציון אטרקטיביות + דירוג סיכון — הכל במסך אחד.</p>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div>מקור נתונים: <a href="https://finnhub.io" target="_blank" rel="noopener" class="ltr">Finnhub.io</a> · הנתונים עשויים להתעדכן בעיכוב · מניות בארה״ב</div>
+  <div class="ts" id="footTs" style="margin-top:4px"></div>
+</footer>
+
+<script>
+"use strict";
+/* ============================================================
+   מסך ניתוח מניות — Equity Research Desk
+   Single-file. Data: Finnhub free tier. Model: rules-based.
+   ============================================================ */
+const BASE = "https://finnhub.io/api/v1";
+const KEY_LS = "finnhub_api_key";
+const RECENT_LS = "sa_recent_tickers";
+const cache = {};            // symbol -> bundle
+let busy = false;
+let cmpChart=null, peersChart=null, peersData=[], liveTimer=null, liveSym=null;
+let finSeries=null, finChart=null;
+
+/* ---------- API key handling ---------- */
+function getKey(){ return (localStorage.getItem(KEY_LS) || "").trim(); }
+function setKey(k){ localStorage.setItem(KEY_LS, k.trim()); }
+function refreshKeyStatus(){
+  const k = getKey(), el = document.getElementById("keyStatus"), t = document.getElementById("keyStatusText");
+  if(k){ el.classList.add("ok"); t.textContent = "מפתח מחובר · החלפה"; }
+  else { el.classList.remove("ok"); t.textContent = "חיבור מפתח API"; }
+}
+function toggleKeyPanel(force){
+  const p = document.getElementById("keyPanel");
+  const show = force===true ? true : (force===false ? false : !p.classList.contains("show"));
+  p.classList.toggle("show", show);
+  if(show){ document.getElementById("keyInput").value = getKey(); document.getElementById("keyInput").focus(); }
+}
+function saveKey(){
+  const v = document.getElementById("keyInput").value.trim();
+  if(!v){ return; }
+  setKey(v); refreshKeyStatus(); toggleKeyPanel(false);
+  const tk = document.getElementById("ticker").value.trim();
+  if(tk) run(); else showHero();
+}
+
+/* ---------- recent tickers ---------- */
+function getRecent(){ try{ return JSON.parse(localStorage.getItem(RECENT_LS)||"[]"); }catch(e){ return []; } }
+function pushRecent(sym){
+  let r = getRecent().filter(x=>x!==sym); r.unshift(sym); r = r.slice(0,7);
+  localStorage.setItem(RECENT_LS, JSON.stringify(r)); renderRecent();
+}
+function renderRecent(){
+  const r = getRecent(), box = document.getElementById("recentChips");
+  if(!r.length){ box.style.display="none"; return; }
+  box.style.display="flex";
+  box.innerHTML = '<span class="lbl">אחרונות:</span>' + r.map(s=>`<span class="chip" onclick="quick('${s}')">${s}</span>`).join("");
+}
+
+/* ---------- fetch layer ---------- */
+async function api(path, params={}){
+  const key = getKey();
+  const qs = new URLSearchParams({...params, token:key}).toString();
+  const res = await fetch(`${BASE}${path}?${qs}`);
+  if(res.status===401 || res.status===403){ const e=new Error("auth"); e.code="auth"; throw e; }
+  if(res.status===429){ const e=new Error("rate"); e.code="rate"; throw e; }
+  if(!res.ok){ const e=new Error("http"+res.status); e.code="http"; throw e; }
+  return res.json();
+}
+
+/* ---------- helpers: formatting ---------- */
+const isNum = v => typeof v==="number" && isFinite(v);
+function pick(obj, keys){ if(!obj) return null; for(const k of keys){ const v=obj[k]; if(isNum(v)) return v; } return null; }
+function fmt(v, d=2){ return isNum(v) ? v.toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d}) : "—"; }
+function fmtPx(v){ return isNum(v) ? "$"+v.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}) : "—"; }
+function fmtPct(v,d=2){ return isNum(v) ? (v>=0?"+":"")+v.toFixed(d)+"%" : "—"; }
+function fmtPctU(v,d=1){ return isNum(v) ? v.toFixed(d)+"%" : "—"; }      // unsigned %
+function fmtX(v,d=1){ return isNum(v) ? v.toFixed(d)+"×" : "—"; }
+function fmtCap(mln){ // value in millions USD
+  if(!isNum(mln)) return "—";
+  if(mln>=1e6) return "$"+(mln/1e6).toFixed(2)+"T";
+  if(mln>=1e3) return "$"+(mln/1e3).toFixed(2)+"B";
+  return "$"+mln.toFixed(0)+"M";
+}
+function esc(s){ return (s==null?"":String(s)).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function clsUD(v){ return isNum(v) ? (v>=0?"up":"down") : ""; }
+
+/* ---------- scoring engine ---------- */
+// band: pairs ascending by threshold; returns score for first threshold >= v
+function band(v, pairs){
+  if(!isNum(v)) return null;
+  for(const [mx,sc] of pairs){ if(v<=mx) return sc; }
+  return pairs[pairs.length-1][1];
+}
+function wavg(items){ // [{score,weight}]
+  let s=0,w=0; for(const it of items){ if(isNum(it.score)){ s+=it.score*it.weight; w+=it.weight; } }
+  return w>0 ? s/w : null;
+}
+const avgDef = arr => { const a=arr.filter(isNum); return a.length? a.reduce((x,y)=>x+y,0)/a.length : null; };
+
+// lower-is-better attractiveness scorers
+const sPE = pe => (isNum(pe)&&pe>0) ? band(pe,[[10,100],[15,90],[20,80],[25,66],[30,52],[40,38],[60,22],[1e9,10]]) : null;
+const sPS = ps => (isNum(ps)&&ps>0) ? band(ps,[[1,100],[2,86],[4,70],[6,54],[10,36],[20,20],[1e9,10]]) : null;
+const sPB = pb => (isNum(pb)&&pb>0) ? band(pb,[[1,100],[2,86],[4,70],[6,54],[10,34],[1e9,18]]) : null;
+const sGrowth = g => isNum(g) ? band(g,[[-20,5],[-5,22],[0,38],[5,52],[10,66],[20,80],[35,92],[1e9,100]]) : null;
+const sMargin = m => isNum(m) ? band(m,[[0,12],[5,42],[10,60],[20,78],[30,90],[1e9,100]]) : null;
+const sROE = r => isNum(r) ? band(r,[[0,10],[5,40],[10,56],[15,72],[25,88],[1e9,100]]) : null;
+const sCurrent = c => isNum(c) ? band(c,[[1,34],[1.5,66],[2,84],[4,90],[1e9,78]]) : null;
+const sDE_attr = d => isNum(d) ? band(d,[[0.3,100],[0.6,88],[1,74],[2,56],[3,36],[1e9,16]]) : null;
+const sCover = c => isNum(c) ? band(c,[[1,10],[3,46],[6,70],[12,88],[1e9,100]]) : null;
+
+// risk scorers (higher = riskier)
+const rBeta = b => isNum(b) ? band(b,[[0.8,20],[1.1,40],[1.5,62],[2,84],[1e9,100]]) : null;
+const rDE = d => isNum(d) ? band(d,[[0.3,15],[0.6,32],[1,50],[2,70],[3,86],[1e9,100]]) : null;
+const rMargin = m => isNum(m) ? band(m,[[0,95],[5,70],[10,50],[20,30],[1e9,15]]) : null;
+const rVal = pe => (isNum(pe)&&pe>0) ? band(pe,[[15,20],[25,36],[40,56],[60,76],[1e9,92]]) : (isNum(pe)?90:null);
+const rLiq = c => isNum(c) ? band(c,[[1,85],[1.5,55],[2.5,28],[1e9,15]]) : null;
+const rSize = mc => isNum(mc) ? band(mc,[[300,100],[2000,76],[10000,50],[50000,30],[1e9,15]]) : null;
+
+function consensusFromRec(rec){
+  if(!rec || !rec.length) return null;
+  const r = rec[0];
+  const tot = (r.strongBuy||0)+(r.buy||0)+(r.hold||0)+(r.sell||0)+(r.strongSell||0);
+  if(!tot) return null;
+  const c = (r.strongBuy*5 + r.buy*4 + r.hold*3 + r.sell*2 + r.strongSell*1)/tot; // 1..5
+  let prev=null;
+  for(let i=1;i<rec.length;i++){
+    const p=rec[i], t=(p.strongBuy||0)+(p.buy||0)+(p.hold||0)+(p.sell||0)+(p.strongSell||0);
+    if(t){ prev=(p.strongBuy*5+p.buy*4+p.hold*3+p.sell*2+p.strongSell*1)/t; if(i>=2) break; }
+  }
+  return {score:c, total:tot, latest:r, trend: prev!=null ? c-prev : null};
+}
+
+function buildModel(M, profile, rec){
+  // extract metrics
+  const pe = pick(M,["peTTM","peBasicExclExtraTTM","peNormalizedAnnual","peExclExtraTTM"]);
+  const ps = pick(M,["psTTM","psAnnual"]);
+  const pb = pick(M,["pbQuarterly","pbAnnual"]);
+  const revG = pick(M,["revenueGrowthTTMYoy","revenueGrowthQuarterlyYoy","revenueGrowth3Y","revenueGrowth5Y"]);
+  const epsG = pick(M,["epsGrowthTTMYoy","epsGrowthQuarterlyYoy","epsGrowth3Y","epsGrowth5Y"]);
+  const netM = pick(M,["netProfitMarginTTM","netProfitMarginAnnual"]);
+  const opM  = pick(M,["operatingMarginTTM","operatingMarginAnnual"]);
+  const gM   = pick(M,["grossMarginTTM","grossMarginAnnual"]);
+  const roe  = pick(M,["roeTTM","roeRfy","roeAnnual"]);
+  const roa  = pick(M,["roaTTM","roaRfy","roaAnnual"]);
+  const cur  = pick(M,["currentRatioQuarterly","currentRatioAnnual"]);
+  const de   = pick(M,["totalDebt/totalEquityQuarterly","totalDebt/totalEquityAnnual","longTermDebt/equityQuarterly","longTermDebt/equityAnnual"]);
+  const cover= pick(M,["netInterestCoverageTTM","netInterestCoverageAnnual"]);
+  const beta = pick(M,["beta"]);
+  const mc   = isNum(profile&&profile.marketCapitalization) ? profile.marketCapitalization : null;
+  const cons = consensusFromRec(rec);
+
+  // attractiveness factors
+  const fVal = avgDef([sPE(pe),sPS(ps),sPB(pb)]);
+  const fGro = avgDef([sGrowth(revG),sGrowth(epsG)]);
+  const fPro = avgDef([sMargin(netM),sROE(roe),sMargin(opM)]);
+  const fHea = avgDef([sCurrent(cur),sDE_attr(de),sCover(cover)]);
+  const fAna = cons ? Math.max(0,Math.min(100,(cons.score-1)/4*100)) : null;
+
+  const attrFactors = [
+    {key:"val",label:"שווי / תמחור",en:"Valuation",weight:20,score:fVal,
+      raw:`P/E ${isNum(pe)?pe.toFixed(1):"—"} · P/S ${isNum(ps)?ps.toFixed(1):"—"} · P/B ${isNum(pb)?pb.toFixed(1):"—"}`},
+    {key:"gro",label:"צמיחה",en:"Growth",weight:20,score:fGro,
+      raw:`הכנסות ${fmtPct(revG,1)} · EPS ${fmtPct(epsG,1)}`},
+    {key:"pro",label:"רווחיות",en:"Profitability",weight:20,score:fPro,
+      raw:`שולי נטו ${fmtPctU(netM)} · ROE ${fmtPctU(roe)}`},
+    {key:"hea",label:"איתנות פיננסית",en:"Financial health",weight:15,score:fHea,
+      raw:`יחס שוטף ${isNum(cur)?cur.toFixed(2):"—"} · חוב/הון ${isNum(de)?de.toFixed(2):"—"}`},
+    {key:"ana",label:"סנטימנט אנליסטים",en:"Analyst sentiment",weight:15,score:fAna,
+      raw: cons?`קונצנזוס ${cons.score.toFixed(2)}/5 (${cons.total})`:"אין כיסוי"},
+  ];
+
+  // risk factors
+  const rfBeta=rBeta(beta), rfDE=rDE(de), rfMar=rMargin(netM), rfVal=rVal(pe), rfLiq=rLiq(cur), rfSize=rSize(mc);
+  const riskFactors = [
+    {key:"vol",label:"תנודתיות",en:"Volatility / Beta",weight:25,score:rfBeta, raw:`β ${isNum(beta)?beta.toFixed(2):"—"}`},
+    {key:"lev",label:"מינוף",en:"Leverage",weight:20,score:rfDE, raw:`חוב/הון ${isNum(de)?de.toFixed(2):"—"}`},
+    {key:"prr",label:"סיכון רווחיות",en:"Profitability",weight:20,score:rfMar, raw:`שולי נטו ${fmtPctU(netM)}`},
+    {key:"var",label:"סיכון תמחור",en:"Valuation",weight:15,score:rfVal, raw:`P/E ${isNum(pe)?pe.toFixed(1):"—"}`},
+    {key:"liq",label:"נזילות",en:"Liquidity",weight:10,score:rfLiq, raw:`יחס שוטף ${isNum(cur)?cur.toFixed(2):"—"}`},
+    {key:"siz",label:"גודל חברה",en:"Size",weight:10,score:rfSize, raw:fmtCap(mc)},
+  ];
+
+  return {
+    metrics:{pe,ps,pb,revG,epsG,netM,opM,gM,roe,roa,cur,de,cover,beta,mc},
+    cons, attrFactors, riskFactors,
+    attrScore: wavg(attrFactors),
+    riskScore: wavg(riskFactors),
+  };
+}
+
+// add momentum factor once we know price + 52w (keeps weights consistent)
+function addMomentum(model, price, hi, lo){
+  if(isNum(price)&&isNum(hi)&&isNum(lo)&&hi>lo){
+    const p=(price-lo)/(hi-lo);
+    const sc = band(p,[[0.15,42],[0.30,62],[0.45,80],[0.70,95],[0.85,82],[1.01,64]]);
+    model.attrFactors.push({key:"mom",label:"מומנטום / מיקום בטווח",en:"52-wk position",weight:10,score:sc,
+      raw:`${(p*100).toFixed(0)}% מהטווח השנתי`});
+    model.attrScore = wavg(model.attrFactors);
+  }
+}
+
+function attrBand(s){
+  if(!isNum(s)) return {t:"—",cls:"t-neu"};
+  if(s>=80) return {t:"אטרקטיביות גבוהה",cls:"t-good"};
+  if(s>=65) return {t:"אטרקטיביות טובה",cls:"t-good"};
+  if(s>=45) return {t:"אטרקטיביות בינונית",cls:"t-ok"};
+  if(s>=30) return {t:"מתחת לממוצע",cls:"t-ok"};
+  return {t:"אטרקטיביות נמוכה",cls:"t-weak"};
+}
+function riskBand(s){
+  if(!isNum(s)) return {t:"—",cls:"t-neu",color:"#9db0c8"};
+  if(s<30) return {t:"סיכון נמוך",cls:"t-good",color:"var(--green)"};
+  if(s<50) return {t:"סיכון בינוני",cls:"t-ok",color:"var(--amber)"};
+  if(s<70) return {t:"סיכון גבוה",cls:"t-weak",color:"var(--red)"};
+  return {t:"סיכון גבוה מאוד",cls:"t-weak",color:"var(--red)"};
+}
+function scoreColor(s){ // attractiveness color (bright enough for dark bg, white-text-safe on pill)
+  if(!isNum(s)) return "#7c8aa0";
+  if(s>=65) return "#1aa06a"; if(s>=45) return "#c98a2e"; return "#df5b4d";
+}
+function riskColor(s){ if(!isNum(s)) return "#7c8aa0"; if(s<30) return "#1aa06a"; if(s<50) return "#c98a2e"; return "#df5b4d"; }
+
+/* ---------- qualitative tags for metric tiles ---------- */
+function qual(type,v){
+  if(!isNum(v)) return {cls:"d-neu"};
+  let s;
+  switch(type){
+    case "pe": s=sPE(v); break; case "ps": s=sPS(v); break; case "pb": s=sPB(v); break;
+    case "growth": s=sGrowth(v); break; case "margin": s=sMargin(v); break; case "roe": s=sROE(v); break;
+    case "current": s=sCurrent(v); break; case "de": s=sDE_attr(v); break; case "cover": s=sCover(v); break;
+    case "beta": s=100-(rBeta(v)||50); break; case "div": s=band(v,[[0,40],[1.5,60],[3,82],[6,90],[12,60],[1e9,35]]); break;
+    default: s=null;
+  }
+  if(!isNum(s)) return {cls:"d-neu"};
+  return {cls: s>=68?"d-good": s>=45?"d-ok":"d-weak"};
+}
+
+/* ---------- news sentiment heuristic ---------- */
+const POS = ["beat","beats","surge","surges","soar","soars","jump","jumps","rally","rallies","rallied","record","records","gain","gains","gained","profit","profits","upgrade","upgrades","upgraded","outperform","raises","raised","strong","strength","bullish","top","tops","topped","rises","rose","climbs","climbed","wins","approval","approved","boost","boosts","expands","growth","grows","grew","best","beat","jumps","optimistic","momentum","buyback","dividend"];
+const NEG = ["miss","misses","missed","plunge","plunges","plunged","slump","slumps","sink","sinks","tumble","tumbles","drop","drops","dropped","fall","falls","fell","decline","declines","loss","losses","downgrade","downgrades","downgraded","lawsuit","probe","investigation","fraud","recall","warns","warning","cuts","cut","weak","weakness","bearish","slashes","slashed","layoff","layoffs","fears","concern","concerns","sued","halts","disappoints","disappointing","slides","slid","selloff","plummet","plummets"];
+const PS_SET=new Set(POS), NS_SET=new Set(NEG);
+function sentiment(text){
+  const w = (text||"").toLowerCase().match(/[a-z]+/g)||[];
+  let p=0,n=0;
+  for(const x of w){ if(PS_SET.has(x)) p++; if(NS_SET.has(x)) n++; }
+  const net=p-n;
+  const t = net>0?"חיובי": net<0?"שלילי":"ניטרלי";
+  const cls = net>0?"t-good": net<0?"t-weak":"t-neu";
+  return {t,cls,net,strength:Math.abs(net),pos:p,neg:n};
+}
+function fmtDate(unixSec){
+  const d=new Date(unixSec*1000);
+  return d.toLocaleDateString("he-IL",{day:"2-digit",month:"2-digit",year:"2-digit"});
+}
+function shortSummary(s){
+  s=(s||"").replace(/\s+/g," ").trim();
+  if(!s) return "";
+  if(s.length<=200) return s;
+  const slice=s.slice(0,205);
+  const dot=Math.max(slice.lastIndexOf(". "),slice.lastIndexOf("! "),slice.lastIndexOf("? "));
+  if(dot>=110) return slice.slice(0,dot+1);
+  const sp=slice.lastIndexOf(" ");
+  return slice.slice(0, sp>0?sp:200).trim()+"…";
+}
+const BIG_SRC=new Set(["reuters","bloomberg","cnbc","wall street journal","the wall street journal","financial times","barron's","barrons","marketwatch","forbes","yahoo","seekingalpha","seeking alpha","associated press","business insider","the motley fool","investor's business daily"]);
+function hotScore(n, nowSec){
+  let s=0;
+  const ageH=(nowSec-(n.datetime||nowSec))/3600;
+  s += Math.max(0, 60-ageH)/60*50;                 // recency (last ~60h) up to 50
+  const sen=sentiment((n.headline||"")+" "+(n.summary||""));
+  s += Math.min(30, sen.strength*9);                // sentiment strength up to 30
+  if(BIG_SRC.has((n.source||"").toLowerCase())) s+=12;
+  if(n.image) s+=4;
+  if((n.summary||"").length>90) s+=4;
+  return s;
+}
+
+/* ---------- auto-translate hot-news text to Hebrew ---------- */
+const TR_EMAIL = "mushka308@gmail.com";   // raises MyMemory free quota; safe to clear
+const trCache = new Map();
+async function translateToHe(text){
+  text=(text||"").trim();
+  if(!text) return "";
+  if(/[֐-׿]/.test(text)) return text;          // already contains Hebrew
+  if(trCache.has(text)) return trCache.get(text);
+  // 1) Google translate (gtx endpoint, no key)
+  try{
+    const u="https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=he&dt=t&q="+encodeURIComponent(text);
+    const r=await fetch(u);
+    if(r.ok){ const j=await r.json(); const out=(j[0]||[]).map(p=>p&&p[0]).join("").trim(); if(out){ trCache.set(text,out); return out; } }
+  }catch(e){}
+  // 2) MyMemory fallback
+  try{
+    const u="https://api.mymemory.translated.net/get?langpair=en|he&de="+encodeURIComponent(TR_EMAIL)+"&q="+encodeURIComponent(text.slice(0,480));
+    const r=await fetch(u);
+    if(r.ok){ const j=await r.json(); const out=j&&j.responseData&&j.responseData.translatedText; if(out && !/MYMEMORY WARNING/i.test(out)){ trCache.set(text,out); return out; } }
+  }catch(e){}
+  return text;   // graceful fallback: keep original English
+}
+async function translateHot(){
+  const els=[...document.querySelectorAll(".to-he[data-en]")];
+  if(!els.length) return;
+  let i=0;
+  async function worker(){
+    while(i<els.length){
+      const el=els[i++], en=el.getAttribute("data-en");
+      try{ const he=await translateToHe(en); if(he && he!==en) el.textContent=he; }catch(e){}
+      el.removeAttribute("data-en");
+    }
+  }
+  await Promise.all([worker(),worker(),worker()]);
+}
+
+/* ---------- price-move vs volatility analysis ---------- */
+const MKT_DAILY_SIGMA = 1.0; // approx S&P 500 average daily move (%), baseline
+function moveAnalysis(Q, M, NEWS){
+  const dp = (Q&&isNum(Q.dp))?Q.dp:null;
+  const beta = pick(M,["beta"]);
+  const r5 = pick(M,["5DayPriceReturnDaily"]);
+  let sigma = isNum(beta) ? Math.abs(beta)*MKT_DAILY_SIGMA : MKT_DAILY_SIGMA;
+  sigma = Math.max(0.4, sigma);                       // floor
+  const res = {dp, beta, sigma, r5, betaBased:isNum(beta)};
+  if(isNum(dp)){
+    res.ratioDay = Math.abs(dp)/sigma;
+    res.dayLvl = res.ratioDay>=3?"extreme": res.ratioDay>=2?"notable":"normal";
+    res.dayDir = dp>=0?1:-1;
+  }
+  if(isNum(r5)){
+    const s5 = sigma*Math.sqrt(5);
+    res.sig5 = s5; res.ratio5 = Math.abs(r5)/s5;
+    res.lvl5 = res.ratio5>=3?"extreme": res.ratio5>=2?"notable":"normal";
+    res.dir5 = r5>=0?1:-1;
+  }
+  res.significant = (res.dayLvl && res.dayLvl!=="normal") || (res.lvl5 && res.lvl5!=="normal");
+  // possible news driver: recent (<54h) item whose sentiment matches today's direction
+  res.driver = null;
+  if(isNum(dp) && Array.isArray(NEWS) && NEWS.length){
+    const now=Date.now()/1000; let best=null, bs=-1;
+    for(const n of NEWS){
+      if(!n.headline) continue;
+      const age=(now-(n.datetime||now))/3600; if(age>54) continue;
+      const sen=sentiment((n.headline||"")+" "+(n.summary||""));
+      const match = dp>=0 ? sen.net>0 : sen.net<0;
+      if(!match) continue;
+      const sc = sen.strength*2 + Math.max(0,54-age)/54*2;
+      if(sc>bs){ bs=sc; best=n; }
+    }
+    res.driver=best;
+  }
+  return res;
+}
+
+/* ============================================================
+   MAIN FLOW
+   ============================================================ */
+function quick(s){ document.getElementById("ticker").value=s; run(); }
+
+async function run(){
+  if(busy) return;
+  const sym = document.getElementById("ticker").value.trim().toUpperCase();
+  const R = document.getElementById("results");
+  if(!sym){ return; }
+  if(!getKey()){ toggleKeyPanel(true); R.innerHTML = info("צריך מפתח API כדי למשוך נתונים. פתחו את פאנל המפתח למעלה והדביקו אותו."); return; }
+
+  busy=true; document.getElementById("goBtn").disabled=true;
+  if(liveTimer){ clearInterval(liveTimer); liveTimer=null; }
+  R.innerHTML = `<div class="status"><div class="spinner"></div>טוען ניתוח עבור <b class="ltr">${esc(sym)}</b>…</div>`;
+
+  try{
+    const today = new Date(), from = new Date(today.getTime()-30*864e5);
+    const dstr = d => d.toISOString().slice(0,10);
+    const [quote,profile,metric,peers,rec,news,earn] = await Promise.allSettled([
+      api("/quote",{symbol:sym}),
+      api("/stock/profile2",{symbol:sym}),
+      api("/stock/metric",{symbol:sym,metric:"all"}),
+      api("/stock/peers",{symbol:sym}),
+      api("/stock/recommendation",{symbol:sym}),
+      api("/company-news",{symbol:sym,from:dstr(from),to:dstr(today)}),
+      api("/stock/earnings",{symbol:sym}),
+    ]);
+
+    // auth / rate-limit detection (if the core calls failed for that reason)
+    const failCode = [quote,profile,metric].map(x=>x.status==="rejected"?x.reason.code:null).find(Boolean);
+    if(failCode==="auth"){ busy=false; document.getElementById("goBtn").disabled=false;
+      toggleKeyPanel(true);
+      R.innerHTML = errBox("מפתח ה-API שגוי או נדחה (401/403). בדקו שהעתקתם אותו נכון מ-Finnhub ונסו שוב."); return; }
+    if(failCode==="rate"){ busy=false; document.getElementById("goBtn").disabled=false;
+      R.innerHTML = errBox("חרגתם ממגבלת הקריאות של Finnhub (60 לדקה). המתינו דקה ונסו שוב."); return; }
+
+    const metricRaw = val(metric);
+    const SERIES = (metricRaw && metricRaw.series) ? metricRaw.series : null;
+    const Q = val(quote), P = val(profile), M = unwrapMetric(metricRaw), PE = val(peers)||[],
+          REC = val(rec)||[], NEWS = val(news)||[], EARN = val(earn)||[];
+
+    // unknown symbol detection
+    const noProfile = !P || !P.name;
+    const noQuote = !Q || (Q.c===0 && Q.pc===0);
+    if(noProfile && noQuote){
+      busy=false; document.getElementById("goBtn").disabled=false;
+      R.innerHTML = errBox(`לא נמצאו נתונים עבור הטיקר <b class="ltr">${esc(sym)}</b>. ודאו שזהו טיקר אמריקאי תקין (לדוגמה: AAPL, MSFT, KO).`);
+      return;
+    }
+
+    const model = buildModel(M, P, REC);
+    const hi = M["52WeekHigh"], lo = M["52WeekLow"];
+    addMomentum(model, Q&&Q.c, hi, lo);
+
+    const bundle = {sym,Q,P,M,PE,REC,NEWS,EARN,model,SERIES};
+    cache[sym]=bundle;
+    pushRecent(sym);
+    render(bundle);
+    document.getElementById("footTs").textContent = "עודכן: " + new Date().toLocaleString("he-IL");
+    // load peers comparison asynchronously
+    loadPeers(sym, PE);
+  }catch(e){
+    R.innerHTML = errBox("אירעה שגיאה במשיכת הנתונים. בדקו את החיבור לאינטרנט ואת מפתח ה-API, ונסו שוב.");
+    console.error(e);
+  }
+  busy=false; document.getElementById("goBtn").disabled=false;
+}
+function val(s){ return s && s.status==="fulfilled" ? s.value : null; }
+// Finnhub /stock/metric nests all fields under .metric — unwrap it
+function unwrapMetric(r){ if(!r || typeof r!=="object") return {}; return (r.metric && typeof r.metric==="object") ? r.metric : r; }
+function info(msg){ return `<div class="card col-12"><div class="badge-na">${msg}</div></div>`; }
+function errBox(msg){ return `<div class="err">${msg}</div>`; }
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+/* ---------- glossary (term explanations, Hebrew) ---------- */
+const GLOSS = {
+  pe:{term:"מכפיל רווח (P/E)", text:"היחס בין מחיר המניה לרווח השנתי למניה — כמה משלמים על כל דולר רווח. מכפיל גבוה משקף ציפיות צמיחה (או תמחור יקר); נמוך עשוי להעיד על מניית ערך, או על בעיה."},
+  ps:{term:"מכפיל מכירות (P/S)", text:"מחיר המניה חלקי ההכנסה למניה. שימושי במיוחד לחברות צעירות שעדיין אינן רווחיות."},
+  pb:{term:"מכפיל הון (P/B)", text:"מחיר המניה חלקי ההון העצמי למניה (השווי בספרים). מתחת ל-1 עשוי לרמז על תמחור חסר; נפוץ בבנקים וחברות נכסים."},
+  eps:{term:"רווח למניה (EPS)", text:"הרווח הנקי של החברה מחולק במספר המניות. זהו הבסיס לחישוב מכפיל הרווח."},
+  netmargin:{term:"שולי רווח נקי", text:"אחוז הרווח הנקי מתוך ההכנסות — כמה מכל שקל מכירות נשאר כרווח אחרי כל ההוצאות והמסים."},
+  opmargin:{term:"שולי רווח תפעולי", text:"הרווח מהפעילות העסקית (לפני ריבית ומס) כאחוז מההכנסות — מודד יעילות תפעולית."},
+  grossmargin:{term:"שולי רווח גולמי", text:"ההכנסות פחות עלות המכר, כאחוז מההכנסות. מראה את הרווחיות הבסיסית של המוצר או השירות."},
+  roe:{term:"תשואה על ההון (ROE)", text:"רווח נקי חלקי ההון העצמי — כמה החברה מייצרת על כספי בעלי המניות. גבוה=יעיל, אך לעיתים מנופח על ידי חוב."},
+  roa:{term:"תשואה על הנכסים (ROA)", text:"רווח נקי חלקי סך הנכסים — עד כמה החברה ממנפת ביעילות את נכסיה לייצור רווח."},
+  growth:{term:"צמיחה", text:"שיעור הגידול בהכנסות או ברווח לעומת התקופה המקבילה אשתקד. צמיחה עקבית היא מנוע מרכזי לעליית ערך לאורך זמן."},
+  current:{term:"יחס שוטף", text:"נכסים שוטפים חלקי התחייבויות שוטפות. מעל 1 — לחברה מספיק נכסים נזילים לכסות חובות קצרי טווח."},
+  de:{term:"יחס חוב להון (Debt/Equity)", text:"סך החוב חלקי ההון העצמי. ככל שגבוה יותר — המינוף והסיכון הפיננסי גבוהים יותר."},
+  cover:{term:"כיסוי ריבית", text:"הרווח התפעולי חלקי הוצאות הריבית — כמה פעמים הרווח מכסה את הריבית. נמוך=סיכון בשירות החוב."},
+  beta:{term:"בטא (β)", text:"מדד לתנודתיות המניה ביחס לשוק. 1=נעה כמו השוק; מעל 1=תנודתית ומסוכנת יותר; מתחת ל-1=יציבה יותר."},
+  div:{term:"תשואת דיבידנד", text:"הדיבידנד השנתי כאחוז ממחיר המניה — התשואה השוטפת למשקיע מחלוקת רווחים."},
+  payout:{term:"יחס חלוקה (Payout)", text:"אחוז הרווח המחולק כדיבידנד. ערך גבוה מאוד עלול להעיד על חלוקה שאינה בת-קיימא."},
+  marketcap:{term:"שווי שוק", text:"מחיר המניה כפול מספר המניות — השווי הכולל של החברה בבורסה."},
+  range52:{term:"טווח 52 שבועות", text:"המחיר הגבוה והנמוך ביותר בשנה האחרונה. המיקום בתוך הטווח מראה אם המניה קרובה לשיא או לשפל."},
+  attr:{term:"ציון אטרקטיביות", text:"ציון 0–100 שהמודל מחשב משקלול תמחור, צמיחה, רווחיות, איתנות פיננסית, סנטימנט אנליסטים ומומנטום. גבוה=פרופיל אטרקטיבי יותר לפי הכללים. אינו המלצת השקעה."},
+  risk:{term:"דירוג סיכון", text:"הערכת סיכון משוקללת מתנודתיות, מינוף, רווחיות, תמחור, נזילות וגודל החברה. ככל שגבוה יותר — הסיכון רב יותר."},
+  consensus:{term:"קונצנזוס אנליסטים", text:"ממוצע המלצות האנליסטים בסולם 1–5 (5=קנייה חזקה). משקף את עמדת השוק המקצועי כלפי המניה."},
+  volmove:{term:"תנועה מול תנודתיות", text:"השוואת תנועת המחיר לתנודתיות הטיפוסית של המניה, במונחי סטיות תקן. תנועה גדולה מפי 2 מהרגיל נחשבת חריגה ומסומנת."},
+  earnings:{term:"רווחים: בפועל מול תחזית", text:"הרווח למניה (EPS) שהחברה דיווחה בפועל בכל רבעון, לעומת תחזית האנליסטים. 'הכאה' (beat) = תוצאה מעל הצפי, סימן חיובי; 'החטאה' (miss) = מתחת לצפי. רצף הכאות מעיד על ביצוע עקבי."},
+};
+
+/* ---------- tooltip engine (hover + tap) ---------- */
+let tipReady=false;
+function ensureTip(){ let t=document.getElementById("tooltip"); if(!t){ t=document.createElement("div"); t.id="tooltip"; document.body.appendChild(t);} return t; }
+function showTip(el){
+  const g=GLOSS[el.getAttribute("data-tip")]; if(!g) return;
+  const t=ensureTip(); t.innerHTML=`<span class="tt-term">${g.term}</span>${g.text}`; t.classList.add("show");
+  const r=el.getBoundingClientRect(), tw=t.offsetWidth, th=t.offsetHeight;
+  let left=r.left+r.width/2-tw/2; left=Math.max(8,Math.min(left, window.innerWidth-tw-8));
+  let top=r.top-th-10; if(top<8) top=r.bottom+10;
+  t.style.left=left+"px"; t.style.top=top+"px";
+}
+function hideTip(){ const t=document.getElementById("tooltip"); if(t) t.classList.remove("show"); }
+function initTooltips(){
+  if(tipReady) return; tipReady=true; ensureTip();
+  document.body.addEventListener("mouseover",e=>{ const el=e.target.closest&&e.target.closest("[data-tip]"); if(el) showTip(el); });
+  document.body.addEventListener("mouseout",e=>{ const el=e.target.closest&&e.target.closest("[data-tip]"); if(el) hideTip(); });
+  document.body.addEventListener("click",e=>{ const el=e.target.closest&&e.target.closest("[data-tip]"); if(el){ showTip(el); clearTimeout(window._tipT); window._tipT=setTimeout(hideTip,4500);} });
+  window.addEventListener("scroll",hideTip,true);
+}
+function tipi(key){ return `<span class="tipi" data-tip="${key}">?</span>`; }
+
+/* ---------- company description (Wikipedia → Hebrew) ---------- */
+function firstSentences(s, n, maxLen){
+  s=(s||"").replace(/\s+/g," ").trim(); if(!s) return "";
+  const parts=s.split(/(?<=[.!?])\s+/); let out="";
+  for(let i=0;i<parts.length && i<n;i++){ out += (out?" ":"")+parts[i]; if(out.length>=maxLen) break; }
+  if(out.length>maxLen+50) out=out.slice(0,maxLen)+"…";
+  return out;
+}
+async function fetchCompanyDesc(name){
+  try{
+    const u="https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&prop=extracts&exintro=1&explaintext=1&redirects=1&generator=search&gsrlimit=1&gsrsearch="+encodeURIComponent(name);
+    const r=await fetch(u);
+    if(r.ok){ const j=await r.json(); const pg=j&&j.query&&j.query.pages; if(pg){ const k=Object.keys(pg)[0]; const ex=pg[k]&&pg[k].extract; if(ex && ex.length>40) return ex; } }
+  }catch(e){}
+  return "";
+}
+async function loadDescription(b){
+  const el=document.getElementById("companyLede"); if(!el) return;
+  const name=(b.P&&b.P.name)||b.sym;
+  const ex=await fetchCompanyDesc(name);
+  if(!ex){ el.innerHTML='<span class="lede-na">תיאור החברה אינו זמין כעת מהמקור.</span>'; return; }
+  const clean=ex.replace(/\s*\([^)]*[\/ˈˌɐ-ʯ̀-ͯ][^)]*\)/g,"").replace(/\s{2,}/g," ").trim();
+  const en=firstSentences(clean,4,600);
+  const he=await translateToHe(en);
+  el.classList.add("has-text"); el.textContent = he||en;
+}
+
+function render(b){
+  const {sym,Q,P,M,REC,NEWS,model}=b;
+  const out=[];
+  out.push(mastheadCard(b));
+  out.push(verdictCard(model));
+  const mv = moveCard(Q,M,NEWS); if(mv) out.push(mv);
+  out.push(chartCard(sym));
+  out.push(priceCard(Q,M));
+  out.push(financialsCard(M,model));
+  { const ec=earningsCard(b.EARN); if(ec) out.push(ec); }
+  out.push(finTimeCard());
+  out.push(compareCard());
+  out.push(breakdownCard(model));
+  out.push(analystsCard(model));
+  out.push(`<div class="card col-7" id="peersCard"><h2 class="ctitle"><span class="ico">⚔️</span>מתחרים והשוואה <span class="wlbl">Peers</span></h2><div class="badge-na">טוען נתוני מתחרים…</div></div>`);
+  out.push(newsCard(NEWS));
+  out.push(disclaimerCard());
+  document.getElementById("results").innerHTML = `<div class="grid">${out.join("")}</div>`;
+  drawGauge(model.attrScore);
+  translateHot();
+  loadDescription(b);
+  loadTradingView(sym);
+  loadComparison(sym, M, P);
+  startLive(sym);
+  finSeries=b.SERIES; drawFinTime();
+}
+
+function frontHeadline(b){
+  const {P,Q,M,model,sym}=b;
+  const nm=`<span class="ltr">${esc((P&&P.name)||sym)}</span>`;
+  const dp=Q&&Q.dp, px=Q&&Q.c, hi=M["52WeekHigh"], lo=M["52WeekLow"];
+  if(isNum(dp)&&Math.abs(dp)>=3) return `${nm} ${dp>=0?"מזנקת":"צונחת"} ${Math.abs(dp).toFixed(1)}% במסחר`;
+  if(isNum(px)&&isNum(hi)&&isNum(lo)&&hi>lo){ const p=(px-lo)/(hi-lo); if(p>=0.97) return `${nm} נסחרת בשיא של 52 שבועות`; if(p<=0.04) return `${nm} נסחרת בשפל של 52 שבועות`; }
+  return `${nm}: ${attrBand(model.attrScore).t}`;
+}
+function mastheadCard(b){
+  const {sym,Q,P,M,model}=b;
+  const px=Q&&Q.c, chg=Q&&Q.d, chgp=Q&&Q.dp;
+  const logo = P&&P.logo ? `<img class="clogo" src="${esc(P.logo)}" alt="" onerror="this.style.display='none'">` : "";
+  const today = new Date().toLocaleDateString("he-IL",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+  const a=attrBand(model.attrScore), r=riskBand(model.riskScore);
+  const meta=[];
+  if(isNum(P&&P.marketCapitalization)) meta.push(`שווי שוק ${tipi("marketcap")} ${fmtCap(P.marketCapitalization)}`);
+  if(P&&P.country) meta.push(`<span class="ltr">${esc(P.country)}</span>`);
+  if(P&&P.weburl) meta.push(`<a href="${esc(P.weburl)}" target="_blank" rel="noopener">אתר החברה ↗</a>`);
+  if(P&&P.ipo) meta.push(`הנפקה: <span class="ltr">${esc(String(P.ipo).slice(0,4))}</span>`);
+  if(isNum(P&&P.shareOutstanding)) meta.push(`מניות במחזור: <span class="num">${P.shareOutstanding>=1000?(P.shareOutstanding/1000).toFixed(2)+"B":P.shareOutstanding.toFixed(0)+"M"}</span>`);
+  const standfirst = `דירוג המודל: <b>${a.t}</b> ${tipi("attr")} <span class="sep">·</span> רמת סיכון: <b>${r.t}</b> ${tipi("risk")}`;
+  return `<div class="card col-12 masthead">
+    <div class="nameplate">מבזק שוק ההון<span class="np-sub">EQUITY HERALD</span></div>
+    <div class="dateline"><span>${today}</span><span>מהדורה מיוחדת <span class="sep">·</span> <span class="ltr">${esc(sym)}</span>${P&&P.exchange?` <span class="sep">·</span> <span class="ltr">${esc(P.exchange)}</span>`:""}</span></div>
+    <div class="lead">
+      <div class="lead-main">
+        <div class="kicker">${P&&P.finnhubIndustry?esc(P.finnhubIndustry):"דוח מניה מיוחד"}</div>
+        <h1 class="headline">${frontHeadline(b)}</h1>
+        <div class="standfirst">${standfirst}</div>
+        <p class="lede" id="companyLede"><span class="lede-na">טוען תיאור החברה…</span></p>
+        ${meta.length?`<div class="byline">${meta.join(' <span class="sep">·</span> ')}</div>`:""}
+      </div>
+      <div class="lead-side">
+        ${logo}
+        <div class="price-block">
+          <div class="px num" id="livePx">${fmtPx(px)}</div>
+          <div class="chg num ${clsUD(chg)}" id="liveChg">${isNum(chg)?(chg>=0?"▲ ":"▼ ")+fmtPx(Math.abs(chg)):""} ${isNum(chgp)?`(${fmtPct(chgp)})`:""}</div>
+          <div class="live-ind"><span class="live-dot"></span>LIVE · <span class="ltr" id="liveTime">—</span></div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function verdictCard(model){
+  const a=attrBand(model.attrScore), r=riskBand(model.riskScore);
+  const mini = model.attrFactors.filter(f=>isNum(f.score)).sort((x,y)=>y.score-x.score);
+  const top = mini.slice(0,2), bottom = mini.slice(-2).reverse();
+  const chip = (f,good)=>`<span class="fm ${good?'t-good':'t-weak'}">${good?'▲':'▼'} ${f.label} ${Math.round(f.score)}</span>`;
+  const summary = buildSummary(model,a,r);
+  return `<div class="card col-12">
+    <h2 class="ctitle"><span class="ico">🎯</span>סיכום המודל <span class="wlbl">Model verdict</span></h2>
+    <div class="verdict">
+      <div class="gauge-wrap">
+        <svg id="gauge" width="200" height="120" viewBox="0 0 200 120"></svg>
+        <div class="gauge-score" id="gaugeScore" style="color:${scoreColor(model.attrScore)}">${isNum(model.attrScore)?Math.round(model.attrScore):"—"}</div>
+        <div class="gauge-label" style="color:${scoreColor(model.attrScore)}">${a.t}</div>
+        <div class="gauge-cap">ציון אטרקטיביות (0–100) ${tipi("attr")}</div>
+      </div>
+      <div class="vbody">
+        <div class="risk-badge ${r.cls}">דירוג סיכון ${tipi("risk")}: ${r.t} ${isNum(model.riskScore)?`· ${Math.round(model.riskScore)}/100`:""}</div>
+        <div class="vsummary">${summary}</div>
+        <div class="factor-mini">
+          ${top.map(f=>chip(f,true)).join("")}
+          ${bottom.map(f=>chip(f,false)).join("")}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function buildSummary(model,a,r){
+  const m=model.metrics, parts=[];
+  const strong = model.attrFactors.filter(f=>isNum(f.score)&&f.score>=70).map(f=>f.label);
+  const weak = model.attrFactors.filter(f=>isNum(f.score)&&f.score<45).map(f=>f.label);
+  parts.push(`לפי המודל הכמותי, המניה מקבלת ציון אטרקטיביות <b>${isNum(model.attrScore)?Math.round(model.attrScore):"—"}/100</b> (${a.t}) עם <b>${r.t}</b>.`);
+  if(strong.length) parts.push(`חוזקות בולטות: ${strong.join(", ")}.`);
+  if(weak.length) parts.push(`נקודות לתשומת לב: ${weak.join(", ")}.`);
+  if(model.cons) parts.push(`קונצנזוס האנליסטים עומד על ${model.cons.score.toFixed(2)} מתוך 5 (${model.cons.total} ממליצים)${isNum(model.cons.trend)?(model.cons.trend>0?", במגמת שיפור":model.cons.trend<0?", במגמת החלשה":""):""}.`);
+  return parts.join(" ");
+}
+
+/* ---------- price-move analysis card ---------- */
+function moveCard(Q, M, NEWS){
+  const a = moveAnalysis(Q, M, NEWS);
+  if(!isNum(a.dp) && !isNum(a.r5)) return "";
+  const sigClass = a.significant ? (a.dp>=0?"sig-up":"sig-down") : "";
+  const flagFor = (lvl,dir)=>{
+    if(!lvl) return "";
+    if(lvl==="normal") return `<span class="move-flag t-neu">במסגרת הנורמה</span>`;
+    const cls = dir>=0?"t-good":"t-weak";
+    const word = lvl==="extreme"?"תנועה חריגה מאוד":"תנועה חריגה";
+    return `<span class="move-flag ${cls}">${dir>=0?"▲":"▼"} ${word}</span>`;
+  };
+  const dayRow = isNum(a.dp) ? `<div class="move-row">
+      <div class="mh">תנועת היום</div>
+      <div class="mbig ${clsUD(a.dp)}">${fmtPct(a.dp,2)}</div>
+      <div class="msub">תנודה יומית טיפוסית: ±${a.sigma.toFixed(1)}% · פי ${a.ratioDay.toFixed(1)} מהרגיל</div>
+      ${flagFor(a.dayLvl,a.dayDir)}
+    </div>` : "";
+  const wkRow = isNum(a.r5) ? `<div class="move-row">
+      <div class="mh">5 ימי מסחר</div>
+      <div class="mbig ${clsUD(a.r5)}">${fmtPct(a.r5,2)}</div>
+      <div class="msub">טווח שבועי טיפוסי: ±${a.sig5.toFixed(1)}% · פי ${a.ratio5.toFixed(1)} מהרגיל</div>
+      ${flagFor(a.lvl5,a.dir5)}
+    </div>` : "";
+
+  let detail="";
+  if(a.significant){
+    const dirWord = a.dp>=0 ? "עלתה" : "ירדה";
+    const lvlWord = (a.dayLvl==="extreme"||a.lvl5==="extreme") ? "חריגה מאוד (מעל 3 סטיות תקן)" : "חריגה (מעל 2 סטיות תקן)";
+    const betaTxt = a.betaBased ? `הנגזרת מהבטא של המניה (β ${a.beta.toFixed(2)})` : "המבוססת על תנודתיות שוק ממוצעת (אין בטא זמין)";
+    let p = "";
+    if(isNum(a.dp) && a.dayLvl!=="normal"){
+      p += `המניה ${dirWord} היום ב-<b>${fmtPct(a.dp,2)}</b> — תנועה גדולה פי <b>${a.ratioDay.toFixed(1)}</b> מהתנודתיות היומית הטיפוסית שלה (כ-±${a.sigma.toFixed(1)}%, ${betaTxt}). מדובר בתנועה ${lvlWord}. `;
+    } else if(isNum(a.r5) && a.lvl5!=="normal"){
+      p += `ב-5 ימי המסחר האחרונים המניה ${a.r5>=0?"עלתה":"ירדה"} ב-<b>${fmtPct(a.r5,2)}</b> — פי <b>${a.ratio5.toFixed(1)}</b> מהטווח השבועי הטיפוסי (כ-±${a.sig5.toFixed(1)}%). מדובר בתנועה ${lvlWord}. `;
+    }
+    if(a.driver){
+      p += `ייתכן שקשור לחדשה מהימים האחרונים: "<a href="${esc(a.driver.url)}" target="_blank" rel="noopener">${esc(a.driver.headline)}</a>" (${esc(a.driver.source||"")}, ${fmtDate(a.driver.datetime)}). `;
+    }
+    p += `תנועה חריגה כלפי מטה עשויה לשקף חדשה שלילית, אכזבה בדוחות או חולשה ענפית; תנועה חריגה כלפי מעלה — הפתעה חיובית או זרז. כדאי לבדוק את סעיף החדשות לפני הסקת מסקנות.`;
+    detail = `<div class="move-detail">${p}</div>`;
+  } else {
+    detail = `<div class="move-detail">תנועת המחיר הנוכחית נמצאת במסגרת התנודתיות הרגילה של המניה — אין כרגע אירוע מחיר חריג שדורש תשומת לב מיוחדת.</div>`;
+  }
+
+  return `<div class="card col-12 movecard ${sigClass}">
+    <h2 class="ctitle"><span class="ico">⚡</span>ניתוח תנועת מחיר מול תנודתיות ${tipi("volmove")}<span class="wlbl">Move vs volatility</span></h2>
+    <div class="move-rows">${dayRow}${wkRow}</div>
+    ${detail}
+    <div class="move-note">התנודתיות הטיפוסית מוערכת מהבטא של המניה מול תנודה יומית ממוצעת של השוק (~1%). זהו אומדן — חישוב מדויק של סטיית התקן ההיסטורית דורש היסטוריית מחירים מלאה (פרימיום ב-Finnhub).</div>
+  </div>`;
+}
+
+function priceCard(Q,M){
+  const px=Q&&Q.c, hi=M["52WeekHigh"], lo=M["52WeekLow"];
+  const dHi=Q&&Q.h, dLo=Q&&Q.l, dOpen=Q&&Q.o, pc=Q&&Q.pc;
+  let yearBar="";
+  if(isNum(px)&&isNum(hi)&&isNum(lo)&&hi>lo){
+    const p=Math.max(0,Math.min(1,(px-lo)/(hi-lo)));
+    yearBar=`<div class="range">
+      <div class="rl"><span>טווח 52 שבועות ${tipi("range52")}</span><span class="rlab num">${(p*100).toFixed(0)}% מהטווח</span></div>
+      <div class="track"><div class="mark" style="right:${p*100}%"></div></div>
+      <div class="ends"><span>${fmtPx(lo)}</span><span>${fmtPx(hi)}</span></div>
+    </div>`;
+  }
+  let dayBar="";
+  if(isNum(dHi)&&isNum(dLo)&&dHi>dLo&&isNum(px)){
+    const p=Math.max(0,Math.min(1,(px-dLo)/(dHi-dLo)));
+    dayBar=`<div class="range">
+      <div class="rl"><span>טווח יומי</span><span class="rlab num">פתיחה ${fmtPx(dOpen)}</span></div>
+      <div class="track"><div class="mark" style="right:${p*100}%"></div></div>
+      <div class="ends"><span>${fmtPx(dLo)}</span><span>${fmtPx(dHi)}</span></div>
+    </div>`;
+  }
+  const rets=[
+    ["5 ימים", pick(M,["5DayPriceReturnDaily"])],
+    ["3 חודשים", pick(M,["13WeekPriceReturnDaily"])],
+    ["6 חודשים", pick(M,["26WeekPriceReturnDaily"])],
+    ["מתחילת השנה", pick(M,["yearToDatePriceReturnDaily","ytdPriceReturnDaily"])],
+    ["שנה", pick(M,["52WeekPriceReturnDaily"])],
+  ];
+  const retHtml = rets.map(([k,v])=>`<div class="ret"><div class="rk">${k}</div><div class="rv num ${clsUD(v)}">${fmtPct(v,1)}</div></div>`).join("");
+  return `<div class="card col-5">
+    <h2 class="ctitle"><span class="ico">📈</span>מחיר וטווח <span class="wlbl">Price &amp; range</span></h2>
+    ${yearBar||'<div class="badge-na">אין נתוני טווח שנתי זמינים.</div>'}
+    ${dayBar}
+    <div class="returns">${retHtml}</div>
+  </div>`;
+}
+
+/* ---------- sector / sub-sector ETF mapping ---------- */
+function sectorMap(ind){
+  const s=(ind||"").toLowerCase();
+  const has=(...k)=>k.some(x=>s.includes(x));
+  let sectorEtf="SPY", sectorName="שוק כללי", subEtf=null, subName=null;
+  if(has("semicon")){sectorEtf="XLK";sectorName="טכנולוגיה";subEtf="SMH";subName="שבבים";}
+  else if(has("software","internet content","application")){sectorEtf="XLK";sectorName="טכנולוגיה";subEtf="IGV";subName="תוכנה";}
+  else if((has("technology","hardware","electronic","information technology")) && !has("biotech")){sectorEtf="XLK";sectorName="טכנולוגיה";}
+  else if(has("bank")){sectorEtf="XLF";sectorName="פיננסים";subEtf="KRE";subName="בנקים";}
+  else if(has("insurance")){sectorEtf="XLF";sectorName="פיננסים";subEtf="KIE";subName="ביטוח";}
+  else if(has("capital market","asset management","financial","credit")){sectorEtf="XLF";sectorName="פיננסים";}
+  else if(has("biotech")){sectorEtf="XLV";sectorName="בריאות";subEtf="XBI";subName="ביוטכנולוגיה";}
+  else if(has("pharma","drug")){sectorEtf="XLV";sectorName="בריאות";subEtf="PJP";subName="פארמה";}
+  else if(has("health","medical","life science")){sectorEtf="XLV";sectorName="בריאות";}
+  else if(has("aerospace","defense")){sectorEtf="XLI";sectorName="תעשייה";subEtf="ITA";subName="אווירונאוטיקה וביטחון";}
+  else if(has("transport","airline","railroad","logistic","trucking")){sectorEtf="XLI";sectorName="תעשייה";subEtf="IYT";subName="תחבורה";}
+  else if((has("industr","machinery","engineering","electrical equipment","building products")) && !has("reit","real estate")){sectorEtf="XLI";sectorName="תעשייה";}
+  else if(has("retail")){sectorEtf="XLY";sectorName="צריכה מחזורית";subEtf="XRT";subName="קמעונאות";}
+  else if(has("auto")){sectorEtf="XLY";sectorName="צריכה מחזורית";subEtf="CARZ";subName="רכב";}
+  else if(has("apparel","restaurant","leisure","hotel","travel","consumer cyclical","discretionary")){sectorEtf="XLY";sectorName="צריכה מחזורית";}
+  else if(has("beverage","food","household","tobacco","consumer defensive","staple","grocery")){sectorEtf="XLP";sectorName="צריכה בסיסית";}
+  else if(has("media","entertainment","telecom","communication","interactive")){sectorEtf="XLC";sectorName="תקשורת";}
+  else if(has("oil","gas","energy","coal","petroleum")){sectorEtf="XLE";sectorName="אנרגיה";if(has("equipment","services")){subEtf="OIH";subName="שירותי נפט";}}
+  else if(has("real estate","reit")){sectorEtf="XLRE";sectorName="נדל\"ן";}
+  else if(has("utilit")){sectorEtf="XLU";sectorName="תשתיות";}
+  else if(has("gold")){sectorEtf="XLB";sectorName="חומרי גלם";subEtf="GDX";subName="זהב";}
+  else if(has("mining","metal","steel","copper")){sectorEtf="XLB";sectorName="חומרי גלם";subEtf="XME";subName="כרייה ומתכות";}
+  else if(has("material","chemical","paper","container")){sectorEtf="XLB";sectorName="חומרי גלם";}
+  return {sectorEtf, sectorName, subEtf, subName};
+}
+
+/* ---------- comparison vs sector & indices ---------- */
+function compareCard(){
+  return `<div class="card col-12" id="cmpCard">
+    <h2 class="ctitle"><span class="ico">📊</span>השוואה מול הסקטור והמדדים <span class="wlbl">vs. Sector &amp; Indices</span></h2>
+    <div class="badge-na">טוען נתוני השוואה…</div>
+  </div>`;
+}
+const CMP_TF=[["5 ימים","5DayPriceReturnDaily"],["3 ח׳","13WeekPriceReturnDaily"],["6 ח׳","26WeekPriceReturnDaily"],["מתחילת השנה","yearToDatePriceReturnDaily"],["שנה","52WeekPriceReturnDaily"]];
+const ETF_EN={SPY:"S&P 500",QQQ:"Nasdaq-100",XLK:"Technology",XLF:"Financials",XLV:"Health Care",XLI:"Industrials",XLY:"Consumer Discretionary",XLP:"Consumer Staples",XLC:"Communication Services",XLE:"Energy",XLRE:"Real Estate",XLU:"Utilities",XLB:"Materials",SMH:"Semiconductors",IGV:"Software",KRE:"Banks",KIE:"Insurance",XBI:"Biotechnology",PJP:"Pharmaceuticals",ITA:"Aerospace & Defense",IYT:"Transportation",XRT:"Retail",CARZ:"Autos",OIH:"Oil & Gas Services",GDX:"Gold Miners",XME:"Metals & Mining"};
+function loadComparison(sym, M, P){
+  const card=document.getElementById("cmpCard"); if(!card) return;
+  const sm=sectorMap(P&&P.finnhubIndustry);
+  const cmp=[{symbol:"SPY",lab:"S&P 500"},{symbol:"QQQ",lab:"Nasdaq-100"}];
+  if(sm.sectorEtf && sm.sectorEtf!=="SPY") cmp.push({symbol:sm.sectorEtf,lab:sm.sectorName+" / "+(ETF_EN[sm.sectorEtf]||sm.sectorEtf)});
+  if(sm.subEtf && sm.subEtf!==sm.sectorEtf) cmp.push({symbol:sm.subEtf,lab:sm.subName+" / "+(ETF_EN[sm.subEtf]||sm.subEtf)});
+  const legendTxt = cmp.map(c=>`<span class="ltr">${esc(c.symbol)}</span> = ${esc(c.lab)}`).join(" · ");
+  card.innerHTML=`<h2 class="ctitle"><span class="ico">📊</span>השוואה מול הסקטור והמדדים <span class="wlbl">vs. Sector &amp; Indices</span></h2>
+    <p class="csub">גרף קווי של ביצועי המניה לעומת מדדים וענפים מייצגים. שנו תקופה (יום / שבוע / חודש / שנה ועוד) בכפתורי הטווח שבתחתית הגרף. כדי לשנות צבע של קו — לחצו על שם הנייר בראש הגרף ובחרו צבע בהגדרות.</p>
+    <div id="cmpchart" class="tvwrap"><div class="tv-na">טוען גרף השוואה…</div></div>
+    <div class="cmpnote">מיוצג על ידי ETF: ${legendTxt}.</div>`;
+  loadTVCompare(String(sym).toUpperCase(), cmp);
+}
+function loadTVCompare(sym, cmp){
+  const wrap=document.getElementById("cmpchart"); if(!wrap) return;
+  try{
+    wrap.innerHTML='<div class="tradingview-widget-container" style="height:100%;width:100%"><div class="tradingview-widget-container__widget" style="height:100%;width:100%"></div></div>';
+    const c=wrap.querySelector(".tradingview-widget-container");
+    const s=document.createElement("script"); s.type="text/javascript"; s.async=true;
+    s.src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
+    s.text=JSON.stringify({
+      autosize:true, symbol:sym, interval:"D", range:"12M",
+      timezone:"Etc/UTC", theme:"dark", style:"3", locale:"he_IL",
+      hide_side_toolbar:true, allow_symbol_change:false, calendar:false, withdateranges:true,
+      compareSymbols: cmp.map(x=>({symbol:x.symbol, position:"SameScale"})),
+      backgroundColor:"rgba(19,30,48,1)", gridColor:"rgba(38,52,75,0.6)",
+      support_host:"https://www.tradingview.com"
+    });
+    c.appendChild(s);
+  }catch(e){ wrap.innerHTML='<div class="tv-na">לא ניתן לטעון את גרף ההשוואה כרגע (נדרש חיבור לאינטרנט).</div>'; }
+}
+function drawCmpChart(canvasId, labels, series){
+  const cv=document.getElementById(canvasId); if(!cv) return;
+  if(typeof Chart==="undefined"){ cv.parentElement.innerHTML='<div class="badge-na">גרף ההשוואה דורש חיבור לאינטרנט (Chart.js).</div>'; return; }
+  const datasets=series.map(s=>({label:s.label,data:s.data,borderColor:s.color,backgroundColor:s.color,pointBackgroundColor:s.color,pointBorderColor:s.color,pointRadius:4,pointHoverRadius:6,borderWidth:s.highlight?4:2,tension:0.3,spanGaps:true}));
+  if(cmpChart) cmpChart.destroy();
+  cmpChart=new Chart(cv,{type:"line",data:{labels,datasets},options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:"#cdd8e8",font:{family:"Heebo",size:12},boxWidth:14,usePointStyle:true,padding:14}},
+      tooltip:{rtl:true,callbacks:{label:c=>`${c.dataset.label}: ${c.parsed.y>=0?"+":""}${c.parsed.y}%`}}},
+    scales:{x:{ticks:{color:"#9db0c8",font:{family:"Heebo"}},grid:{color:"rgba(38,52,75,0.3)"}},
+      y:{ticks:{color:"#9db0c8",callback:v=>v+"%"},grid:{color:"rgba(38,52,75,0.45)"}}}
+  }});
+}
+
+/* ---------- peers chart + expandable details ---------- */
+function drawPeersChart(){
+  const cv=document.getElementById("peersCanvas"); if(!cv||!peersData.length||typeof Chart==="undefined") return;
+  const sel=document.getElementById("peerMetric"); const metric=sel?sel.value:"score";
+  const getV=d=>{ const m=d.model.metrics; if(metric==="score")return d.model.attrScore; if(metric==="ret1y")return pick(d.M,["52WeekPriceReturnDaily"]); if(metric==="pe")return m.pe; if(metric==="nm")return m.netM; return null; };
+  const isPct=(metric==="ret1y"||metric==="nm");
+  const arr=peersData.map(d=>({sym:d.sym,self:d.self,v:getV(d)})).filter(x=>isNum(x.v)).sort((a,b)=>b.v-a.v);
+  const labels=arr.map(x=>x.sym), vals=arr.map(x=>+x.v.toFixed(2)), colors=arr.map(x=>x.self?"#3f86f4":"#5b6b85");
+  if(peersChart) peersChart.destroy();
+  peersChart=new Chart(cv,{type:"bar",data:{labels,datasets:[{data:vals,backgroundColor:colors,borderRadius:5,maxBarThickness:46}]},options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{rtl:true,callbacks:{label:c=>`${c.parsed.y}${isPct?"%":""}`}}},
+    scales:{x:{ticks:{color:"#9db0c8",font:{family:"Inter"}},grid:{display:false}},
+      y:{ticks:{color:"#9db0c8",callback:v=>isPct?v+"%":v},grid:{color:"rgba(38,52,75,0.45)"}}}
+  }});
+}
+function togglePeer(t){ const r=document.getElementById("pd-"+t); if(r) r.style.display=(r.style.display==="none"||!r.style.display)?"table-row":"none"; }
+
+/* ---------- real-time price polling ---------- */
+function startLive(sym){
+  liveSym=sym;
+  if(liveTimer) clearInterval(liveTimer);
+  liveTimer=setInterval(()=>pollQuote(sym), 12000);
+}
+async function pollQuote(sym){
+  if(sym!==liveSym) return;
+  try{ const q=await api("/quote",{symbol:sym}); if(sym===liveSym) updateQuoteUI(q); }catch(e){}
+}
+function updateQuoteUI(Q){
+  if(!Q) return;
+  const px=document.getElementById("livePx"); if(px&&isNum(Q.c)) px.textContent=fmtPx(Q.c);
+  const chg=document.getElementById("liveChg");
+  if(chg){ chg.className="chg num "+clsUD(Q.d); chg.textContent=(isNum(Q.d)?(Q.d>=0?"▲ ":"▼ ")+fmtPx(Math.abs(Q.d)):"")+" "+(isNum(Q.dp)?`(${fmtPct(Q.dp)})`:""); }
+  const t=document.getElementById("liveTime"); if(t) t.textContent=new Date().toLocaleTimeString("he-IL");
+}
+
+/* ---------- financials over time (from metric series) ---------- */
+const FIN_METRICS=[
+  {v:"netMargin", keys:["netMargin"], label:"שולי רווח נקי", unit:"%"},
+  {v:"grossMargin", keys:["grossMargin"], label:"שולי רווח גולמי", unit:"%"},
+  {v:"operatingMargin", keys:["operatingMargin"], label:"שולי רווח תפעולי", unit:"%"},
+  {v:"pretaxMargin", keys:["pretaxMargin"], label:"שולי רווח לפני מס", unit:"%"},
+  {v:"roe", keys:["roe"], label:"תשואה על ההון (ROE)", unit:"%"},
+  {v:"roa", keys:["roa"], label:"תשואה על הנכסים (ROA)", unit:"%"},
+  {v:"roic", keys:["roic","roicTTM"], label:"תשואה על ההון המושקע (ROIC)", unit:"%"},
+  {v:"fcfPerShare", keys:["freeCashFlowPerShare","fcfPerShare"], label:"תזרים חופשי למניה (FCF)", unit:"$"},
+  {v:"fcfMargin", keys:["fcfMargin","freeCashFlowMargin"], label:"שולי תזרים חופשי (FCF)", unit:"%"},
+  {v:"salesPerShare", keys:["salesPerShare"], label:"מכירות למניה", unit:"$"},
+  {v:"eps", keys:["eps","epsBasicExclExtraItems","epsDiluted"], label:"רווח למניה (EPS)", unit:"$"},
+  {v:"bookValue", keys:["bookValue","bookValuePerShare","tangibleBookValuePerShare"], label:"שווי בספרים למניה", unit:"$"},
+  {v:"dividendPerShare", keys:["dividendPerShareAnnual","dividendPerShare","dividendsPerShare"], label:"דיבידנד למניה", unit:"$"},
+  {v:"pe", keys:["pe"], label:"מכפיל רווח (P/E)", unit:"×"},
+  {v:"ps", keys:["ps","psAnnual","psTTM"], label:"מכפיל מכירות (P/S)", unit:"×"},
+  {v:"pb", keys:["pb","pbAnnual","pbQuarterly"], label:"מכפיל הון (P/B)", unit:"×"},
+  {v:"pfcf", keys:["pfcf","pfcfTTM"], label:"מכפיל תזרים חופשי (P/FCF)", unit:"×"},
+  {v:"currentRatio", keys:["currentRatio"], label:"יחס שוטף", unit:"×"},
+  {v:"quickRatio", keys:["quickRatio"], label:"יחס מהיר", unit:"×"},
+  {v:"de", keys:["totalDebtToEquity","totalDebt/totalEquity","longtermDebtTotalEquity","longtermDebt/equity"], label:"חוב להון (Debt/Equity)", unit:"×"},
+  {v:"payoutRatio", keys:["payoutRatio","payoutRatioTTM"], label:"יחס חלוקה (Payout)", unit:"%"},
+  {v:"assetTurnover", keys:["assetTurnover","assetTurnoverTTM","assetTurnoverAnnual"], label:"מחזור נכסים", unit:"×"},
+  {v:"inventoryTurnover", keys:["inventoryTurnover","inventoryTurnoverTTM","inventoryTurnoverAnnual"], label:"מחזור מלאי", unit:"×"},
+];
+function finTimeCard(){
+  return `<div class="card col-12" id="finTimeCard">
+    <h2 class="ctitle"><span class="ico">📈</span>נתונים כספיים לאורך זמן <span class="wlbl">Financials over time</span></h2>
+    <div class="badge-na">טוען נתונים היסטוריים…</div>
+  </div>`;
+}
+function drawFinTime(){
+  const card=document.getElementById("finTimeCard"); if(!card) return;
+  if(!finSeries || (!finSeries.annual && !finSeries.quarterly)){
+    card.innerHTML=`<h2 class="ctitle"><span class="ico">📈</span>נתונים כספיים לאורך זמן <span class="wlbl">Financials over time</span></h2><div class="badge-na">נתונים היסטוריים אינם זמינים עבור מניה זו בתוכנית החינמית של Finnhub.</div>`;
+    return;
+  }
+  if(!document.getElementById("finMetric")){
+    const opts=FIN_METRICS.map(m=>`<option value="${m.v}">${m.label}</option>`).join("");
+    card.innerHTML=`<h2 class="ctitle"><span class="ico">📈</span>נתונים כספיים לאורך זמן <span class="wlbl">Financials over time</span></h2>
+      <p class="csub">מדדים פיננסיים של החברה לאורך תקופות — להשוואה מול דוחות קודמים. בחרי מדד ותדירות.</p>
+      <div class="peer-chart-head">
+        <span>מדד:</span><select id="finMetric" onchange="drawFinTime()">${opts}</select>
+        <span style="margin-inline-start:10px">תדירות:</span><select id="finFreq" onchange="drawFinTime()"><option value="annual">שנתי</option><option value="quarterly">רבעוני</option></select>
+      </div>
+      <div class="cmpwrap"><canvas id="finCanvas"></canvas></div>
+      <div class="cmpnote" id="finYoY"></div>`;
+  }
+  const mk=(document.getElementById("finMetric")||{}).value||"netMargin";
+  const freq=(document.getElementById("finFreq")||{}).value||"annual";
+  const def=FIN_METRICS.find(m=>m.v===mk)||FIN_METRICS[0];
+  const bucket=finSeries[freq]||{};
+  let arr=null; for(const k of def.keys){ if(Array.isArray(bucket[k])&&bucket[k].length){ arr=bucket[k]; break; } }
+  const cv=document.getElementById("finCanvas"), yo=document.getElementById("finYoY");
+  if(!arr){ if(finChart){finChart.destroy();finChart=null;} if(yo) yo.textContent="אין נתונים זמינים למדד זה (נסי מדד אחר או תדירות אחרת)."; return; }
+  const data=arr.slice().filter(p=>p&&isNum(p.v)).sort((a,b)=>String(a.period).localeCompare(String(b.period)));
+  const last=data.slice(-10);
+  const labels=last.map(p=>freq==="annual"?String(p.period).slice(0,4):String(p.period).slice(0,7));
+  const vals=last.map(p=>+p.v.toFixed(2));
+  if(typeof Chart==="undefined"){ if(cv) cv.parentElement.innerHTML='<div class="badge-na">הגרף דורש חיבור לאינטרנט (Chart.js).</div>'; return; }
+  if(finChart) finChart.destroy();
+  finChart=new Chart(cv,{type:"bar",data:{labels,datasets:[{label:def.label,data:vals,backgroundColor:"#3f86f4",borderRadius:5,maxBarThickness:46}]},options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{rtl:true,callbacks:{label:c=>`${def.label}: ${c.parsed.y}${def.unit==="%"?"%":(def.unit==="$"?"":def.unit)}`}}},
+    scales:{x:{ticks:{color:"#9db0c8",font:{family:"Inter"}},grid:{display:false}},
+      y:{ticks:{color:"#9db0c8",callback:v=>v+(def.unit==="%"?"%":"")},grid:{color:"rgba(38,52,75,0.45)"}}}
+  }});
+  if(yo && last.length>=2){
+    const cur=last[last.length-1].v, prev=last[last.length-2].v;
+    const diff=cur-prev, pct=prev!==0?(diff/Math.abs(prev)*100):null, dir=diff>=0?"up":"down";
+    const fmtv=x=>def.unit==="%"?x.toFixed(1)+"%":(def.unit==="$"?"$"+x.toFixed(2):x.toFixed(2));
+    yo.innerHTML=`השוואה לתקופה קודמת — ${def.label}: <b class="num">${fmtv(cur)}</b> מול <span class="num">${fmtv(prev)}</span> · <span class="${dir} num">${diff>=0?"▲":"▼"} ${isNum(pct)?(pct>=0?"+":"")+pct.toFixed(1)+"%":""}</span>`;
+  } else if(yo){ yo.textContent=""; }
+}
+
+function chartCard(sym){
+  return `<div class="card col-12">
+    <h2 class="ctitle"><span class="ico">📉</span>גרף טכני <span class="wlbl">TradingView</span></h2>
+    <p class="csub">גרף אינטראקטיבי מלא — אפשר להחליף טווח זמן, להוסיף אינדיקטורים ולהגדיל. הנתונים מסופקים על־ידי TradingView.</p>
+    <div id="tvchart" class="tvwrap"><div class="tv-na">טוען גרף…</div></div>
+  </div>`;
+}
+function loadTradingView(sym){
+  const wrap=document.getElementById("tvchart"); if(!wrap) return;
+  try{
+    wrap.innerHTML='<div class="tradingview-widget-container" style="height:100%;width:100%"><div class="tradingview-widget-container__widget" style="height:100%;width:100%"></div></div>';
+    const container=wrap.querySelector(".tradingview-widget-container");
+    const s=document.createElement("script");
+    s.type="text/javascript";
+    s.async=true;
+    s.src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
+    s.text=JSON.stringify({
+      autosize:true, symbol:String(sym||"").toUpperCase(), interval:"D",
+      timezone:"Etc/UTC", theme:"dark", style:"1", locale:"he_IL",
+      hide_side_toolbar:false, allow_symbol_change:false, calendar:false,
+      backgroundColor:"rgba(19,30,48,1)", gridColor:"rgba(38,52,75,0.6)",
+      support_host:"https://www.tradingview.com"
+    });
+    container.appendChild(s);
+    // graceful note if the widget fails to load (e.g. offline)
+    setTimeout(()=>{ if(wrap.querySelector("iframe")===null && !wrap.querySelector(".tv-na")){ } }, 4000);
+  }catch(e){ wrap.innerHTML='<div class="tv-na">לא ניתן לטעון את הגרף כרגע (נדרש חיבור לאינטרנט).</div>'; }
+}
+function metricTile(label,en,value,type,raw,tip){
+  const q=qual(type,raw);
+  return `<div class="metric">
+    <div class="ml"><span>${label}${tip?tipi(tip):""}<span class="dot-tag ${q.cls}"></span></span><span class="en">${en}</span></div>
+    <div class="mv">${value}</div>
+  </div>`;
+}
+function financialsCard(M,model){
+  const m=model.metrics;
+  const eps = pick(M,["epsTTM","epsBasicExclExtraItemsTTM","epsAnnual"]);
+  const div = pick(M,["dividendYieldIndicatedAnnual","currentDividendYieldTTM","dividendYield5Y"]);
+  const payout = pick(M,["payoutRatioTTM","payoutRatioAnnual"]);
+  const groups=[
+    ["תמחור · Valuation",[
+      metricTile("מכפיל רווח","P/E", isNum(m.pe)?m.pe.toFixed(1):"—","pe",m.pe,"pe"),
+      metricTile("מכפיל מכירות","P/S", isNum(m.ps)?m.ps.toFixed(1):"—","ps",m.ps,"ps"),
+      metricTile("מכפיל הון","P/B", isNum(m.pb)?m.pb.toFixed(1):"—","pb",m.pb,"pb"),
+      metricTile("רווח למניה","EPS TTM", isNum(eps)?"$"+eps.toFixed(2):"—","",null,"eps"),
+    ]],
+    ["רווחיות · Profitability",[
+      metricTile("שולי רווח נקי","Net margin", fmtPctU(m.netM),"margin",m.netM,"netmargin"),
+      metricTile("שולי רווח תפעולי","Op. margin", fmtPctU(m.opM),"margin",m.opM,"opmargin"),
+      metricTile("שולי רווח גולמי","Gross margin", fmtPctU(m.gM),"margin",m.gM,"grossmargin"),
+      metricTile("תשואה על ההון","ROE", fmtPctU(m.roe),"roe",m.roe,"roe"),
+      metricTile("תשואה על נכסים","ROA", fmtPctU(m.roa),"roe",m.roa,"roa"),
+    ]],
+    ["צמיחה · Growth",[
+      metricTile("צמיחת הכנסות","Rev. growth", fmtPct(m.revG,1),"growth",m.revG,"growth"),
+      metricTile("צמיחת רווח","EPS growth", fmtPct(m.epsG,1),"growth",m.epsG,"growth"),
+    ]],
+    ["איתנות · Balance sheet",[
+      metricTile("יחס שוטף","Current ratio", isNum(m.cur)?m.cur.toFixed(2):"—","current",m.cur,"current"),
+      metricTile("חוב/הון","Debt/Equity", isNum(m.de)?m.de.toFixed(2):"—","de",m.de,"de"),
+      metricTile("כיסוי ריבית","Int. coverage", isNum(m.cover)?m.cover.toFixed(1)+"×":"—","cover",m.cover,"cover"),
+      metricTile("בטא","Beta", isNum(m.beta)?m.beta.toFixed(2):"—","beta",m.beta,"beta"),
+    ]],
+    ["דיבידנד · Dividend",[
+      metricTile("תשואת דיבידנד","Div. yield", fmtPctU(div),"div",div,"div"),
+      metricTile("יחס חלוקה","Payout", fmtPctU(payout),"",null,"payout"),
+    ]],
+  ];
+  const html = groups.map(([gh,tiles])=>`<div class="mgroup"><div class="gh">${gh}</div><div class="metrics">${tiles.join("")}</div></div>`).join("");
+  return `<div class="card col-7">
+    <h2 class="ctitle"><span class="ico">📋</span>דוחות ויחסים פיננסיים <span class="wlbl">Financials</span></h2>
+    <p class="csub">הנקודה הצבעונית ליד כל מדד היא הערכה איכותית של המודל (ירוק=חזק · כתום=בינוני · אדום=חלש)</p>
+    ${html}
+  </div>`;
+}
+
+function earningsCard(EARN){
+  const list=(EARN||[]).filter(e=>isNum(e.actual)&&isNum(e.estimate)).slice(0,6);
+  if(!list.length) return "";
+  const beats=list.filter(e=>e.actual>=e.estimate).length;
+  const cells=list.map(e=>{
+    const beat=e.actual>=e.estimate;
+    const surp=isNum(e.surprisePercent)?e.surprisePercent:(e.estimate?(e.actual-e.estimate)/Math.abs(e.estimate)*100:null);
+    return `<div class="eq">
+      <div class="eqh">Q${e.quarter} ${e.year}</div>
+      <div class="eqa num">$${e.actual.toFixed(2)}</div>
+      <div class="eqe">צפי <span class="num">$${e.estimate.toFixed(2)}</span></div>
+      <div class="eqs ${beat?'up':'down'} num">${beat?'▲ הכאה':'▼ החטאה'}${isNum(surp)?` ${(surp>=0?'+':'')+surp.toFixed(1)}%`:''}</div>
+    </div>`;
+  }).join("");
+  return `<div class="card col-12">
+    <h2 class="ctitle"><span class="ico">📑</span>רווחים: בפועל מול תחזית ${tipi("earnings")}<span class="wlbl">Earnings beats</span></h2>
+    <p class="csub">רווח למניה (EPS) בפועל מול תחזית האנליסטים ב-${list.length} הרבעונים האחרונים — הכתה את התחזית ב-<b>${beats}</b> מתוך ${list.length}.</p>
+    <div class="eqrow">${cells}</div>
+  </div>`;
+}
+
+function breakdownCard(model){
+  const row = (f,isRisk)=>{
+    const sc=f.score; const col = isRisk? riskColor(sc) : scoreColor(sc);
+    const w = isNum(sc)? Math.round(sc):0;
+    return `<tr>
+      <td class="f-name">${f.label}<small>${f.en} · משקל ${f.weight}%</small></td>
+      <td class="barcell"><div class="minibar"><div class="mf" style="width:${w}%;background:${col}"></div></div></td>
+      <td style="width:34px;text-align:center;font-weight:700;font-family:'Inter';color:${col}">${isNum(sc)?w:"—"}</td>
+      <td class="f-raw">${f.raw}</td>
+    </tr>`;
+  };
+  return `<div class="card col-12">
+    <h2 class="ctitle"><span class="ico">🧮</span>פירוק הציון — שקיפות מלאה <span class="wlbl">Score breakdown</span></h2>
+    <p class="csub">כל גורם מחושב מהנתונים בכללים קבועים, ואז משוקלל. גורמים חסרי נתון מושמטים והמשקלים מנורמלים מחדש.</p>
+    <div class="bd-grid">
+      <div class="bd">
+        <h4>גורמי אטרקטיביות <span class="score-pill" style="background:${scoreColor(model.attrScore)}">${isNum(model.attrScore)?Math.round(model.attrScore):"—"}/100</span></h4>
+        <table class="bdt">${model.attrFactors.map(f=>row(f,false)).join("")}</table>
+      </div>
+      <div class="bd">
+        <h4>גורמי סיכון <span class="score-pill" style="background:${riskColor(model.riskScore)}">${isNum(model.riskScore)?Math.round(model.riskScore):"—"}/100</span></h4>
+        <table class="bdt">${model.riskFactors.map(f=>row(f,true)).join("")}</table>
+      </div>
+    </div>
+  </div>`;
+}
+
+function analystsCard(model){
+  const c=model.cons;
+  if(!c || !c.latest){
+    return `<div class="card col-5"><h2 class="ctitle"><span class="ico">👔</span>אנליסטים <span class="wlbl">Analysts</span></h2><div class="badge-na">אין נתוני המלצות אנליסטים זמינים עבור מניה זו (או שהם דורשים מנוי בתשלום ב-Finnhub).</div></div>`;
+  }
+  const r=c.latest, tot=c.total;
+  const seg=(n,cls,lab)=> n>0 ? `<span class="${cls}" style="flex:${n}" title="${lab}: ${n}">${n}</span>`:"";
+  const consLabel = c.score>=4.2?"קנייה חזקה":c.score>=3.5?"קנייה":c.score>=2.5?"החזקה":c.score>=1.8?"מכירה":"מכירה חזקה";
+  const trend = isNum(c.trend)? (c.trend>0.05?'<span class="up">▲ משתפר</span>':c.trend<-0.05?'<span class="down">▼ נחלש</span>':'יציב') : "";
+  return `<div class="card col-5">
+    <h2 class="ctitle"><span class="ico">👔</span>המלצות אנליסטים <span class="wlbl">Analysts</span></h2>
+    <div class="consensus">קונצנזוס ${tipi("consensus")}: ${consLabel} <span class="num" style="color:var(--muted);font-size:13px">(${c.score.toFixed(2)}/5)</span></div>
+    <div class="trendline">${tot} אנליסטים · מגמה: ${trend||"—"}</div>
+    <div class="recbar">
+      ${seg(r.strongBuy,"rc-sb","Strong Buy")}${seg(r.buy,"rc-b","Buy")}${seg(r.hold,"rc-h","Hold")}${seg(r.sell,"rc-s","Sell")}${seg(r.strongSell,"rc-ss","Strong Sell")}
+    </div>
+    <div class="reclegend">
+      <span><i class="rc-sb"></i>קנייה חזקה</span><span><i class="rc-b"></i>קנייה</span><span><i class="rc-h"></i>החזקה</span><span><i class="rc-s"></i>מכירה</span><span><i class="rc-ss"></i>מכירה חזקה</span>
+    </div>
+    <p class="csub" style="margin-top:12px;margin-bottom:0">יעדי מחיר מפורטים (price target) דורשים מנוי בתשלום ב-Finnhub ולכן אינם מוצגים כאן.</p>
+  </div>`;
+}
+
+function newsCard(NEWS){
+  const list=(NEWS||[]).filter(n=>n.headline);
+  if(!list.length){
+    return `<div class="card col-12"><h2 class="ctitle"><span class="ico">📰</span>חדשות <span class="wlbl">News</span></h2><div class="badge-na">אין חדשות זמינות מהחודש האחרון.</div></div>`;
+  }
+  list.sort((a,b)=>(b.datetime||0)-(a.datetime||0));
+  const now=Date.now()/1000;
+  const ranked=[...list].map(n=>({n,h:hotScore(n,now)})).sort((a,b)=>b.h-a.h);
+  const hot=ranked.slice(0,3).map(x=>x.n);
+  const hotUrls=new Set(hot.map(n=>n.url));
+
+  const hotCards = hot.map(n=>{
+    const s=sentiment((n.headline||"")+" "+(n.summary||""));
+    const sum=shortSummary(n.summary);
+    return `<div class="hotcard">
+      <div class="hhead"><span class="fire">🔥 חם</span><span class="sent ${s.cls}">${s.t}</span></div>
+      <div class="htitle"><a href="${esc(n.url)}" target="_blank" rel="noopener"><span class="to-he" data-en="${esc(n.headline)}">${esc(n.headline)}</span></a></div>
+      ${sum?`<div class="hsum to-he" data-en="${esc(sum)}">${esc(sum)}</div>`:""}
+      <div class="hmeta">${esc(n.source||"")} · ${fmtDate(n.datetime)}</div>
+    </div>`;
+  }).join("");
+
+  const more=list.filter(n=>!hotUrls.has(n.url)).slice(0,9).map(n=>{
+    const s=sentiment((n.headline||"")+" "+(n.summary||""));
+    const thumb = n.image ? `<img class="nthumb" src="${esc(n.image)}" alt="" onerror="this.style.display='none'">` : "";
+    return `<div class="news-item">
+      ${thumb}
+      <div class="nbody">
+        <div class="nhead"><a href="${esc(n.url)}" target="_blank" rel="noopener"><span class="to-he" data-en="${esc(n.headline)}">${esc(n.headline)}</span></a></div>
+        <div class="nmeta"><span class="nsource">${esc(n.source||"")}</span><span class="num">${fmtDate(n.datetime)}</span><span class="sent ${s.cls}">${s.t}</span></div>
+      </div>
+    </div>`;
+  }).join("");
+
+  return `<div class="card col-12">
+    <h2 class="ctitle"><span class="ico">📰</span>חדשות חמות + סיכומים <span class="wlbl">Hot news + summaries</span></h2>
+    <p class="csub">3 הידיעות החמות (לפי עדכניות, עוצמת סנטימנט ומקור) עם סיכום קצר בעברית. הכותרות והסיכומים מתורגמים אוטומטית (ייתכנו אי-דיוקי תרגום מכונה); תיוג הסנטימנט היוריסטי.</p>
+    <div class="news-hotgrid">${hotCards}</div>
+    ${more?`<div class="news-sub">עוד כותרות אחרונות</div>${more}`:""}
+  </div>`;
+}
+
+function disclaimerCard(){
+  return `<div class="card col-12"><div class="disclaimer">
+    <b>גילוי נאות:</b> כלי זה מספק ניתוח חינוכי מבוסס-נתונים בלבד, המחושב לפי מודל כללים שקוף. אין באמור משום ייעוץ השקעות, שיווק השקעות, או המלצה לקנות/למכור נייר ערך כלשהו, ואין בו התחשבות בנתונים, בצרכים ובמטרות האישיות שלך. ביצועי עבר אינם מעידים על העתיד. הנתונים מסופקים על־ידי <span class="ltr">Finnhub</span> ועשויים להיות חלקיים, מעוכבים או שגויים. יש להתייעץ עם בעל רישיון מתאים לפני קבלת החלטות השקעה.
+  </div></div>`;
+}
+
+/* ---------- gauge (semicircular) ---------- */
+function drawGauge(score){
+  const svg=document.getElementById("gauge"); if(!svg) return;
+  const cx=100,cy=105,r=80, start=Math.PI, end=0;
+  function pt(a){ return [cx+r*Math.cos(a), cy-r*Math.sin(a)]; }
+  function arc(a0,a1,color,w){
+    const [x0,y0]=pt(a0),[x1,y1]=pt(a1); const large=(a0-a1)>Math.PI?1:0;
+    return `<path d="M ${x0} ${y0} A ${r} ${r} 0 ${large} 1 ${x1} ${y1}" stroke="${color}" stroke-width="${w}" fill="none" stroke-linecap="round"/>`;
+  }
+  let html="";
+  html+=arc(start,end,"#22324c",14);                 // track
+  if(isNum(score)){
+    const frac=Math.max(0,Math.min(1,score/100));
+    const a1=start-(start-end)*frac;
+    html+=arc(start,a1,scoreColor(score),14);
+    const [nx,ny]=pt(a1);
+    html+=`<circle cx="${nx}" cy="${ny}" r="8" fill="#131e30" stroke="${scoreColor(score)}" stroke-width="4"/>`;
+  }
+  html+=`<text x="22" y="118" font-size="10" fill="#71849e" font-family="Inter">0</text>`;
+  html+=`<text x="170" y="118" font-size="10" fill="#71849e" font-family="Inter">100</text>`;
+  svg.innerHTML=html;
+}
+
+/* ---------- peers comparison (async) ---------- */
+async function loadPeers(sym, peerList){
+  const card=document.getElementById("peersCard"); if(!card) return;
+  let list=[...new Set((peerList||[]).filter(s=>s && s!==sym))].slice(0,5);
+  if(!list.length){ peersData=[]; card.innerHTML=`<h2 class="ctitle"><span class="ico">⚔️</span>מתחרים <span class="wlbl">Peers</span></h2><div class="badge-na">לא נמצאו מתחרים ישירים בנתוני Finnhub.</div>`; return; }
+  const self=cache[sym];
+  const data=[{sym, Q:self.Q, P:self.P, M:self.M, model:self.model, self:true}];
+  const results=await Promise.allSettled(list.map(async s=>{
+    const [q,p,m]=await Promise.allSettled([api("/quote",{symbol:s}),api("/stock/profile2",{symbol:s}),api("/stock/metric",{symbol:s,metric:"all"})]);
+    return {s, Q:val(q), P:val(p), M:unwrapMetric(val(m))};
+  }));
+  for(const r of results){ if(r.status==="fulfilled" && r.value){ const d=r.value; const mdl=buildModel(d.M,d.P,[]); addMomentum(mdl, d.Q&&d.Q.c, d.M["52WeekHigh"], d.M["52WeekLow"]); data.push({sym:d.s,Q:d.Q,P:d.P,M:d.M,model:mdl,self:false}); } }
+  peersData=data;
+  const rows=data.map(d=>{
+    const px=d.Q&&d.Q.c, mc=d.P&&d.P.marketCapitalization, pe=d.model.metrics.pe, nm=d.model.metrics.netM, yr=pick(d.M,["52WeekPriceReturnDaily"]), sc=d.model.attrScore;
+    const main=`<tr class="${d.self?'self':'prow'}"${d.self?'':` onclick="togglePeer('${esc(d.sym)}')"`}>
+      <td class="n pt">${d.self?'★ ':''}${esc(d.sym)}</td>
+      <td class="num">${fmtPx(px)}</td><td class="num">${fmtCap(mc)}</td>
+      <td class="num">${isNum(pe)?pe.toFixed(1):"—"}</td><td class="num">${fmtPctU(nm)}</td>
+      <td class="num ${clsUD(yr)}">${fmtPct(yr,1)}</td>
+      <td class="num" style="font-weight:700;color:${scoreColor(sc)}">${isNum(sc)?Math.round(sc):"—"}</td>
+    </tr>`;
+    if(d.self) return main;
+    const a=attrBand(d.model.attrScore), rk=riskBand(d.model.riskScore);
+    const detail=`<tr class="peer-detail" id="pd-${esc(d.sym)}" style="display:none"><td colspan="7"><div class="pd-box">
+      <div class="pd-name">${esc((d.P&&d.P.name)||d.sym)} <span class="pd-tk ltr">${esc(d.sym)}</span></div>
+      <div class="pd-grid"><span>ענף: ${d.P&&d.P.finnhubIndustry?esc(d.P.finnhubIndustry):"—"}</span><span>דירוג מודל: <b>${a.t}</b> · ${rk.t}</span><span>תשואת שנה: <b class="${clsUD(yr)}">${fmtPct(yr,1)}</b></span><span>שולי נטו: <b>${fmtPctU(nm)}</b></span><span>ROE: <b>${fmtPctU(d.model.metrics.roe)}</b></span><span>חוב/הון: <b>${isNum(d.model.metrics.de)?d.model.metrics.de.toFixed(2):"—"}</b></span></div>
+      <button class="pd-btn" onclick="event.stopPropagation();quick('${esc(d.sym)}')">נתח מניה זו ↗</button>
+    </div></td></tr>`;
+    return main+detail;
+  }).join("");
+  card.innerHTML=`<h2 class="ctitle"><span class="ico">⚔️</span>מתחרים והשוואה ענפית <span class="wlbl">Peers</span></h2>
+    <p class="csub">לחצי על שורת מתחרה לפרטים ולניתוח מלא. ★ = המניה הנבחנת.</p>
+    <div class="peer-chart-head"><span>גרף לפי:</span><select id="peerMetric" onchange="drawPeersChart()"><option value="score">ציון המודל</option><option value="ret1y">תשואת שנה</option><option value="pe">מכפיל רווח (P/E)</option><option value="nm">שולי רווח נקי</option></select></div>
+    <div class="cmpwrap"><canvas id="peersCanvas"></canvas></div>
+    <div style="overflow-x:auto;margin-top:14px"><table class="peers">
+      <thead><tr><th class="n">טיקר</th><th>מחיר</th><th>שווי שוק</th><th>P/E</th><th>שולי נטו</th><th>תשואה שנתית</th><th>ציון</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>`;
+  drawPeersChart();
+}
+function peerRow(sym,Q,P,M,model,isSelf){
+  const px=Q&&Q.c, mc=P&&P.marketCapitalization, pe=model.metrics.pe, nm=model.metrics.netM;
+  const yr=pick(M,["52WeekPriceReturnDaily"]);
+  const sc=model.attrScore;
+  return `<tr class="${isSelf?'self':''}">
+    <td class="n pt">${esc(sym)}</td>
+    <td class="num">${fmtPx(px)}</td>
+    <td class="num">${fmtCap(mc)}</td>
+    <td class="num">${isNum(pe)?pe.toFixed(1):"—"}</td>
+    <td class="num">${fmtPctU(nm)}</td>
+    <td class="num ${clsUD(yr)}">${fmtPct(yr,1)}</td>
+    <td class="num" style="font-weight:700;color:${scoreColor(sc)}">${isNum(sc)?Math.round(sc):"—"}</td>
+  </tr>`;
+}
+
+/* ---------- init ---------- */
+function showWelcome(){
+  const R=document.getElementById("results"); if(!R) return;
+  R.innerHTML=`<div class="welcome">
+    <div class="big">👋</div>
+    <h2>ברוכים הבאים למסך ניתוח המניות</h2>
+    <p>הכלי שולף נתונים חיים על כל מניה אמריקאית — מחיר, דוחות כספיים, חדשות, אנליסטים, מתחרים, גרפים וציון אטרקטיביות. כדי שזה יעבוד צריך פעם אחת מפתח גישה אישי <b>וחינמי</b> לנתונים (משירות בשם Finnhub). זה לוקח כדקה:</p>
+    <ol>
+      <li>היכנסו ל-<a href="https://finnhub.io/register" target="_blank" rel="noopener">finnhub.io/register</a> והירשמו בחינם (אימייל וסיסמה, ללא כרטיס אשראי).</li>
+      <li>במסך ה-<span class="ltr">Dashboard</span> העתיקו את ה-<span class="ltr">API Key</span> שמופיע שם.</li>
+      <li>לחצו על הכפתור למטה, הדביקו את המפתח, ולחצו "שמירה".</li>
+    </ol>
+    <button class="startbtn" onclick="toggleKeyPanel(true)">🔑 הזנת מפתח כדי להתחיל</button>
+    <p class="fine">המפתח נשמר אך ורק בדפדפן שלכם (<span class="ltr">localStorage</span>) ונשלח רק ל-Finnhub — לא לאף גורם אחר. הכלי מיועד למניות בארה״ב ומספק ניתוח חינוכי מבוסס-נתונים בלבד; אינו ייעוץ השקעות.</p>
+  </div>`;
+}
+function showHero(){
+  const R=document.getElementById("results"); if(!R) return;
+  R.innerHTML=`<div class="hero-empty"><div class="big">🏦</div><h2>בחרו טיקר כדי להתחיל</h2><p>הקלידו סימול של מניה אמריקאית (למשל AAPL) ולחצו "נתח מניה".</p></div>`;
+}
+refreshKeyStatus(); renderRecent(); initTooltips();
+if(!getKey()){ showWelcome(); toggleKeyPanel(true); }
+</script>
+</body>
+</html>
