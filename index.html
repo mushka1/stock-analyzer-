@@ -2,7 +2,13 @@
 <html lang="he" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ניתוח מניות">
+<meta name="theme-color" content="#0a111e">
+<link rel="apple-touch-icon" href="icon.png">
 <title>מסך ניתוח מניות · Equity Research Desk</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -305,6 +311,37 @@
   .welcome .startbtn:hover{background:#5a98f6}
   .welcome .fine{font-size:12px;color:var(--muted2);margin-top:18px;line-height:1.6}
   .welcome a{color:var(--accent);font-weight:600}
+
+  /* ===== mobile / phone ===== */
+  html,body{max-width:100%;overflow-x:hidden}
+  @media(max-width:600px){
+    .wrap,.search-wrap,main{padding-left:12px;padding-right:12px}
+    .grid{gap:13px}
+    .card{padding:15px}
+    .masthead{padding:16px 14px}
+    .nameplate{font-size:19px;letter-spacing:.5px}
+    .nameplate .np-sub{letter-spacing:2px}
+    .dateline{font-size:10px;letter-spacing:.3px}
+    .headline{font-size:22px}
+    .standfirst{font-size:14px}
+    .lede{font-size:13.5px;line-height:1.7}
+    .lede.has-text::first-letter{font-size:2.4em}
+    .brand h1{font-size:18px}.brand .sub{font-size:11px}
+    .price-block{text-align:right}.price-block .px{font-size:25px}
+    .search-row .field{min-width:0}
+    .search-row input{font-size:16px}
+    .btn{padding:0 18px;font-size:15px}
+    .card h2.ctitle{font-size:14px}
+    .card h2.ctitle .wlbl{display:none}
+    .metrics{grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:9px}
+    .metric .mv{font-size:16px}
+    .tvwrap{height:340px}
+    .cmpwrap{height:280px}
+    .gauge-wrap{margin:0 auto 6px}
+    .returns{gap:6px}.ret{min-width:60px}
+    .eq{min-width:104px}
+    #tooltip{max-width:78vw}
+  }
 </style>
 </head>
 <body>
