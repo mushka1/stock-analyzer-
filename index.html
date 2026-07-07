@@ -1150,18 +1150,22 @@ function compareCard(){
 }
 const CMP_TF=[["5 ימים","5DayPriceReturnDaily"],["3 ח׳","13WeekPriceReturnDaily"],["6 ח׳","26WeekPriceReturnDaily"],["מתחילת השנה","yearToDatePriceReturnDaily"],["שנה","52WeekPriceReturnDaily"]];
 const ETF_EN={SPY:"S&P 500",QQQ:"Nasdaq-100",XLK:"Technology",XLF:"Financials",XLV:"Health Care",XLI:"Industrials",XLY:"Consumer Discretionary",XLP:"Consumer Staples",XLC:"Communication Services",XLE:"Energy",XLRE:"Real Estate",XLU:"Utilities",XLB:"Materials",SMH:"Semiconductors",IGV:"Software",KRE:"Banks",KIE:"Insurance",XBI:"Biotechnology",PJP:"Pharmaceuticals",ITA:"Aerospace & Defense",IYT:"Transportation",XRT:"Retail",CARZ:"Autos",OIH:"Oil & Gas Services",GDX:"Gold Miners",XME:"Metals & Mining"};
-function loadComparison(sym, M, P){
+async function loadComparison(sym, M, P){
   const card=document.getElementById("cmpCard"); if(!card) return;
   const sm=sectorMap(P&&P.finnhubIndustry);
-  const cmp=[{symbol:"SPY",lab:"S&P 500"},{symbol:"QQQ",lab:"Nasdaq-100"}];
-  if(sm.sectorEtf && sm.sectorEtf!=="SPY") cmp.push({symbol:sm.sectorEtf,lab:sm.sectorName+" / "+(ETF_EN[sm.sectorEtf]||sm.sectorEtf)});
-  if(sm.subEtf && sm.subEtf!==sm.sectorEtf) cmp.push({symbol:sm.subEtf,lab:sm.subName+" / "+(ETF_EN[sm.subEtf]||sm.subEtf)});
-  const legendTxt = cmp.map(c=>`<span class="ltr">${esc(c.symbol)}</span> = ${esc(c.lab)}`).join(" · ");
+  const benches=[{t:"SPY",lab:"S&P 500",color:"#22c55e"},{t:"QQQ",lab:"נאסדק · Nasdaq",color:"#f59e0b"}];
+  if(sm.sectorEtf && sm.sectorEtf!=="SPY") benches.push({t:sm.sectorEtf,lab:"סקטור: "+sm.sectorName+" ("+(ETF_EN[sm.sectorEtf]||sm.sectorEtf)+")",color:"#a855f7"});
+  if(sm.subEtf && sm.subEtf!==sm.sectorEtf) benches.push({t:sm.subEtf,lab:"תת־סקטור: "+sm.subName+" ("+(ETF_EN[sm.subEtf]||sm.subEtf)+")",color:"#ec4899"});
+  const res=await Promise.allSettled(benches.map(b=>api("/stock/metric",{symbol:b.t,metric:"all"})));
+  const readRet=(m)=>CMP_TF.map(([_,f])=>{ const v=pick(m,[f]); return isNum(v)?+v.toFixed(2):null; });
+  const series=[{label:String(sym).toUpperCase()+" (המניה)",data:readRet(M),color:"#3f86f4",highlight:true}];
+  benches.forEach((b,i)=>series.push({label:b.lab,data:readRet(unwrapMetric(val(res[i]))),color:b.color}));
+  const subN=(sm.subEtf && sm.subEtf!==sm.sectorEtf)?` · תת־סקטור = ${esc(sm.subName)} (${sm.subEtf})`:"";
   card.innerHTML=`<h2 class="ctitle"><span class="ico">📊</span>השוואה מול הסקטור והמדדים <span class="wlbl">vs. Sector &amp; Indices</span></h2>
-    <p class="csub">גרף קווי של ביצועי המניה לעומת מדדים וענפים מייצגים. שנו תקופה (יום / שבוע / חודש / שנה ועוד) בכפתורי הטווח שבתחתית הגרף. כדי לשנות צבע של קו — לחצו על שם הנייר בראש הגרף ובחרו צבע בהגדרות.</p>
-    <div id="cmpchart" class="tvwrap"><div class="tv-na">טוען גרף השוואה…</div></div>
-    <div class="cmpnote">מיוצג על ידי ETF: ${legendTxt}.</div>`;
-  loadTVCompare(String(sym).toUpperCase(), cmp);
+    <p class="csub">תשואת המחיר של המניה לעומת מדדים וענפים מייצגים, על פני טווחי זמן (5 ימים עד שנה). כל קו בצבע משלו — המניה בקו העבה.</p>
+    <div class="cmpwrap"><canvas id="cmpCanvas"></canvas></div>
+    <div class="cmpnote">מקור: Finnhub · ייצוג ענפי באמצעות ETF: סקטור = ${esc(sm.sectorName)} (${sm.sectorEtf})${subN}.</div>`;
+  drawCmpChart("cmpCanvas", CMP_TF.map(t=>t[0]), series);
 }
 function loadTVCompare(sym, cmp){
   const wrap=document.getElementById("cmpchart"); if(!wrap) return;
